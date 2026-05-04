@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LogOut, PlusCircle, ClipboardList, PlayCircle, Trophy, ChevronRight } from 'lucide-react-native';
+import { LogOut, PlusCircle, ClipboardList, PlayCircle, Trophy, ChevronRight, Activity } from 'lucide-react-native';
 
 const NIVEIS = [
   { nome: 'Estudante Calouro', minXp: 0, cor: '#9CA3AF' }, // gray-400
@@ -179,6 +179,20 @@ export default function DashboardScreen() {
           <ChevronRight color="#F59E0B" size={32} />
         </TouchableOpacity>
 
+        {/* Estatísticas Card */}
+        <TouchableOpacity 
+          activeOpacity={0.8} 
+          style={styles.estatisticasCard}
+          onPress={() => router.push('/estatisticas')}
+        >
+          <Activity color="#10B981" size={40} />
+          <View style={styles.cardTextContainer}>
+            <Text style={[styles.cardTitle, { color: '#1F2937' }]}>Estatísticas</Text>
+            <Text style={[styles.cardSubtitle, { color: '#6B7280' }]}>Veja métricas e o tempo por módulo.</Text>
+          </View>
+          <ChevronRight color="#10B981" size={32} />
+        </TouchableOpacity>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -296,6 +310,21 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#FCD34D', // amber-300
     shadowColor: '#F59E0B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  estatisticasCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    borderRadius: 16,
+    marginTop: 16,
+    borderWidth: 2,
+    borderColor: '#D1FAE5', // emerald-100
+    shadowColor: '#10B981',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 10,
