@@ -12,14 +12,14 @@ import { router } from 'expo-router';
 import { ArrowLeft, Clock, Target, Activity, Award } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Módulo mock de estatísticas
+// Estado inicial das estatísticas (zeradas)
 const MODULOS_STATS = [
-  { id: 'prontuario', nome: 'Prontuário', tempoMin: 12, acertos: 95, cor: '#3B82F6' },
-  { id: 'triagem', nome: 'Triagem', tempoMin: 8, acertos: 80, cor: '#8B5CF6' },
-  { id: 'ecg', nome: 'ECG', tempoMin: 25, acertos: 70, cor: '#EF4444' },
-  { id: 'enzimas', nome: 'Enzimas', tempoMin: 15, acertos: 85, cor: '#F59E0B' },
-  { id: 'protocolo', nome: 'Protocolo', tempoMin: 20, acertos: 90, cor: '#10B981' },
-  { id: 'alta', nome: 'Alta', tempoMin: 5, acertos: 100, cor: '#14B8A6' },
+  { id: 'prontuario', nome: 'Prontuário', tempoMin: 0, acertos: 0, cor: '#3B82F6' },
+  { id: 'triagem', nome: 'Triagem', tempoMin: 0, acertos: 0, cor: '#8B5CF6' },
+  { id: 'ecg', nome: 'ECG', tempoMin: 0, acertos: 0, cor: '#EF4444' },
+  { id: 'enzimas', nome: 'Enzimas', tempoMin: 0, acertos: 0, cor: '#F59E0B' },
+  { id: 'protocolo', nome: 'Protocolo', tempoMin: 0, acertos: 0, cor: '#10B981' },
+  { id: 'alta', nome: 'Alta', tempoMin: 0, acertos: 0, cor: '#14B8A6' },
 ];
 
 export default function EstatisticasScreen() {
@@ -109,7 +109,7 @@ export default function EstatisticasScreen() {
         <Text style={styles.sectionTitle}>Tempo Gasto (minutos)</Text>
         <View style={styles.card}>
           {stats.map((modulo, index) => {
-            const timePercentage = (modulo.tempoMin / maxTime) * 100;
+            const timePercentage = maxTime > 0 ? (modulo.tempoMin / maxTime) * 100 : 0;
             return (
               <View key={`tempo-${modulo.id}`} style={[styles.statRow, index === stats.length - 1 && { borderBottomWidth: 0 }]}>
                 <View style={styles.statInfo}>
