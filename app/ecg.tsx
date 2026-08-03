@@ -6,133 +6,107 @@ import {
   SafeAreaView, 
   ScrollView, 
   TouchableOpacity, 
-  Platform,
-  Alert,
-  Dimensions
+  Platform
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ArrowLeft, TriangleAlert } from 'lucide-react-native';
-import Svg, { Path, Line } from 'react-native-svg';
+import { ArrowLeft, HeartPulse, ShieldAlert } from 'lucide-react-native';
+import { getPatientById } from '../data/patientsData';
+import { getGenieHint, saveSessionPerformance } from '../utils/adaptiveEngine';
+import PatientMonitorHeader from '../components/ui/PatientMonitorHeader';
+import ClinicalFeedbackOverlay from '../components/ui/ClinicalFeedbackOverlay';
+import NurseGenieAvatar from '../components/ui/NurseGenieAvatar';
 
-const PERGUNTAS = [
-  {
-    titulo: 'Treino: Leitura 1',
-    texto: 'Antes de avaliar o Sr. Carlos, o preceptor pede para você identificar este traçado de um monitor de rotina:',
-    opcoes: [
-      'Ritmo Sinusal Normal',
-      'Fibrilação Ventricular',
-      'Assistolia'
-    ],
-    correta: 0,
-    tipoTracado: 1,
-    alerta: 'HR: 75',
-    corAlerta: '#69F0AE', // greenAccent
-  },
-  {
-    titulo: 'Treino: Leitura 2',
-    texto: 'O alarme de emergência soou no leito ao lado! Identifique este ritmo caótico de parada cardiorrespiratória:',
-    opcoes: [
-      'Bradicardia Sinusal',
-      'Fibrilação Ventricular',
-      'Bloqueio Atrioventricular'
-    ],
-    correta: 1,
-    tipoTracado: 2,
-    alerta: 'HR: ---',
-    corAlerta: '#FF5252', // redAccent
-  },
-  {
-    titulo: 'ECG do Sr. Carlos',
-    texto: 'Foco total no nosso paciente. Derivação V2. A dor torácica continua intensa. Qual é o diagnóstico exato?',
-    opcoes: [
-      'Ritmo Sinusal Normal',
-      'Fibrilação Ventricular',
-      'IAM com Supra de ST',
-      'Taquicardia Ventricular'
-    ],
-    correta: 2,
-    tipoTracado: 3,
-    alerta: 'HR: 110',
-    corAlerta: '#FF5252',
-  }
-];
+export default function ECGScreen() {
+  const params = useLocalSearchParams<{ patientId?: string }>();
+  const patientId = params.patientId || 'carlos';
+  const paciente = getPatientById(patientId);
 
-export default function EcgScreen() {
-  const [perguntaAtual, setPerguntaAtual] = useState(0);
+  const [opcaoSelecionada, setOpcaoSelecionada] = useState<number | null>(null);
+  const [erros, setErros] = useState(0);
+  const [dicasSolicitadas, setDicasSolicitadas] = useState(0);
+  const [tempoInicio] = useState<number>(Date.now());
 
-  const showAlert = (title: string, message: string, onSuccess?: () => void) => {
-    if (Platform.OS === 'web') {
-      window.alert(`${title}\n\n${message}`);
-      if (onSuccess) onSuccess();
-    } else {
-      Alert.alert(title, message, [{ text: 'Continuar', onPress: onSuccess }]);
+  const [overlayConfig, setOverlayConfig] = useState<{
+    visible: boolean;
+    variant: 'success' | 'warning' | 'completion';
+    titulo: string;
+    mensagem: string;
+    explicacaoMedica?: string;
+    xpGanhos?: number;
+    onConfirm: () => void;
+  }>({
+    visible: false,
+    variant: 'success',
+    titulo: '',
+    mensagem: '',
+    onConfirm: () => {},
+  });
+
+  const verificarResposta = async () => {
+    if (opcaoSelecionada === null) {
+      setOverlayConfig({
+        visible: true,
+        variant: 'warning',
+        titulo: 'Laudo Pendente',
+        mensagem: 'Por favor, selecione uma hipótese eletrocardiográfica antes de confirmar o laudo.',
+        onConfirm: () => setOverlayConfig(prev => ({ ...prev, visible: false }))
+      });
+      return;
     }
-  };
 
-  const verificarDiagnostico = async (indiceEscolhido: number) => {
-    if (indiceEscolhido === PERGUNTAS[perguntaAtual].correta) {
-      if (perguntaAtual < PERGUNTAS.length - 1) {
-        setPerguntaAtual(perguntaAtual + 1);
-      } else {
-        try {
-          const xpRaw = await AsyncStorage.getItem('xpEnfermeiro');
-          const xpAtual = xpRaw ? parseInt(xpRaw, 10) : 0;
-          await AsyncStorage.setItem('xpEnfermeiro', (xpAtual + 200).toString());
+    if (opcaoSelecionada === paciente.ecg.correta) {
+      try {
+        const xpRaw = await AsyncStorage.getItem('xpEnfermeiro');
+        const xpAtual = xpRaw ? parseInt(xpRaw, 10) : 0;
+        await AsyncStorage.setItem('xpEnfermeiro', (xpAtual + 200).toString());
+        
+        await AsyncStorage.setItem(`venceu_mod3_paciente_${patientId}`, 'true');
+        if (patientId === 'carlos') {
           await AsyncStorage.setItem('venceu_mod3', 'true');
-
-          showAlert('Águia do ECG!', 'Você demonstrou excelente competência na leitura de monitores cardíacos e diagnosticou a isquemia aguda do paciente.\n\nGanhou +200 XP!', () => {
-            router.back();
-          });
-        } catch (e) {
-          console.error(e);
         }
+
+        const tempoTotalSegundos = Math.round((Date.now() - tempoInicio) / 1000);
+        const avaliacao = await saveSessionPerformance({
+          patientId,
+          moduloId: 'ecg',
+          totalPerguntas: 1,
+          acertos: 1,
+          erros,
+          tempoTotalSegundos,
+          dicasSolicitadas,
+          timestamp: new Date().toISOString()
+        });
+
+        setOverlayConfig({
+          visible: true,
+          variant: 'success',
+          titulo: 'Laudo ECG Confirmado com Sucesso!',
+          mensagem: `Diagnóstico de ECG correto!\n• Achado: ${paciente.ecg.achadoPrincipal}\n\n${avaliacao.mensagemGenio}`,
+          explicacaoMedica: paciente.ecg.explicacao,
+          xpGanhos: 200,
+          onConfirm: () => {
+            setOverlayConfig(prev => ({ ...prev, visible: false }));
+            router.back();
+          }
+        });
+      } catch (e) {
+        console.error(e);
       }
     } else {
-      showAlert('Atenção', 'Diagnóstico Incorreto. Analise o formato das ondas e o segmento ST com atenção.');
+      setErros(erros + 1);
+      setOverlayConfig({
+        visible: true,
+        variant: 'warning',
+        titulo: 'Erro na Interpretação do ECG',
+        mensagem: 'A opção escolhida não é compatível com o vetor elétrico de repolarização.',
+        explicacaoMedica: paciente.ecg.explicacao,
+        onConfirm: () => setOverlayConfig(prev => ({ ...prev, visible: false }))
+      });
     }
   };
 
-  const pergunta = PERGUNTAS[perguntaAtual];
-
-  // Configurações do SVG
-  // Subtraindo 48 (padding horizontal 24*2) e 8 das bordas
-  const screenWidth = Dimensions.get('window').width;
-  const svgWidth = Platform.OS === 'web' ? Math.min(screenWidth - 48, 800) : screenWidth - 48; 
-  const svgHeight = 200;
-  const yBase = svgHeight * 0.6;
-  const startX = svgWidth * 0.1;
-
-  // Grid background
-  const renderGrid = () => {
-    const lines = [];
-    for (let i = 0; i < svgWidth; i += 20) {
-      lines.push(<Line key={`v-${i}`} x1={i} y1={0} x2={i} y2={svgHeight} stroke="rgba(76, 175, 80, 0.2)" strokeWidth={1} />);
-    }
-    for (let i = 0; i < svgHeight; i += 20) {
-      lines.push(<Line key={`h-${i}`} x1={0} y1={i} x2={svgWidth} y2={i} stroke="rgba(76, 175, 80, 0.2)" strokeWidth={1} />);
-    }
-    return lines;
-  };
-
-  // Traçados ECG
-  const getEcgPath = (tipo: number) => {
-    switch(tipo) {
-      case 1: // Normal
-        return `M 0 ${yBase} L ${startX} ${yBase} Q ${startX + 10} ${yBase - 10}, ${startX + 20} ${yBase} L ${startX + 30} ${yBase} L ${startX + 35} ${yBase + 10} L ${startX + 45} ${yBase - 80} L ${startX + 55} ${yBase + 20} L ${startX + 60} ${yBase} Q ${startX + 80} ${yBase - 20}, ${startX + 100} ${yBase} L ${svgWidth} ${yBase}`;
-      case 2: // FV
-        return `M 0 ${yBase} Q 20 ${yBase - 40}, 40 ${yBase + 10} Q 60 ${yBase + 50}, 80 ${yBase - 20} Q 100 ${yBase - 60}, 120 ${yBase + 30} Q 140 ${yBase + 40}, 160 ${yBase - 10} Q 180 ${yBase - 50}, 200 ${yBase + 20} Q 220 ${yBase + 30}, 240 ${yBase - 30} Q 260 ${yBase - 20}, 280 ${yBase + 40} Q 300 ${yBase + 20}, 320 ${yBase - 40} L ${svgWidth} ${yBase}`;
-      case 3: // Supra ST
-        const stElevation = yBase - 35;
-        return `M 0 ${yBase} L ${startX} ${yBase} Q ${startX + 10} ${yBase - 10}, ${startX + 20} ${yBase} L ${startX + 30} ${yBase} L ${startX + 35} ${yBase + 10} L ${startX + 45} ${yBase - 80} L ${startX + 55} ${yBase + 20} L ${startX + 65} ${stElevation} Q ${startX + 90} ${stElevation - 20}, ${startX + 110} ${yBase} L ${svgWidth} ${yBase}`;
-      default:
-        return `M 0 ${yBase} L ${svgWidth} ${yBase}`;
-    }
-  };
-
-  const getEcgColor = (tipo: number) => {
-    return tipo === 2 ? '#FF5252' : '#69F0AE';
-  };
+  const dicaGenioAtual = getGenieHint(patientId, 2, 0);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -140,48 +114,87 @@ export default function EcgScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
           <ArrowLeft color="#FFFFFF" size={24} />
         </TouchableOpacity>
-        <Text style={styles.appBarTitle}>Módulo 3: ECG</Text>
+        <Text style={styles.appBarTitle}>Módulo 3: ECG ({paciente.nome})</Text>
         <View style={{ width: 40 }} />
       </View>
 
+      <PatientMonitorHeader
+        nomePaciente={paciente.nome}
+        sinaisVitais={paciente.anamnese.sinaisVitais}
+        estadoAlarme={paciente.complexidade >= 4 ? 'critico' : 'atencao'}
+      />
+
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.progressText}>
-          Etapa {perguntaAtual + 1} de {PERGUNTAS.length}
-        </Text>
+        <View style={styles.ecgCard}>
+          <View style={styles.ecgHeaderRow}>
+            <HeartPulse color="#34D399" size={22} />
+            <Text style={styles.ecgTitle}>Monitor & Traçado Eletrocardiográfico</Text>
+          </View>
+          <Text style={styles.ecgDesc}>
+            {paciente.ecg.descricaoCompleta}
+          </Text>
 
-        <Text style={styles.questionTitle}>{pergunta.titulo}</Text>
-        <Text style={styles.questionText}>{pergunta.texto}</Text>
-
-        <View style={styles.ecgMonitorContainer}>
-          <Svg width={svgWidth} height={svgHeight}>
-            {renderGrid()}
-            <Path 
-              d={getEcgPath(pergunta.tipoTracado)} 
-              stroke={getEcgColor(pergunta.tipoTracado)} 
-              strokeWidth={3} 
-              fill="none" 
-              strokeLinejoin="round" 
-            />
-          </Svg>
-          <View style={styles.alertBox}>
-            <TriangleAlert color={pergunta.corAlerta} size={16} />
-            <Text style={[styles.alertText, { color: pergunta.corAlerta }]}>{pergunta.alerta}</Text>
+          <View style={styles.infoBadge}>
+            <ShieldAlert color="#38BDF8" size={14} />
+            <Text style={styles.infoBadgeText}>
+              Parede Suspeita: <Text style={{ fontWeight: 'bold', color: '#F8FAFC' }}>{paciente.ecg.paredeAtingida}</Text>
+            </Text>
           </View>
         </View>
 
-        <View style={styles.optionsContainer}>
-          {pergunta.opcoes.map((opcao, index) => (
-            <TouchableOpacity
-              key={index}
-              activeOpacity={0.8}
-              onPress={() => verificarDiagnostico(index)}
-              style={styles.optionButton}
-            >
-              <Text style={styles.optionText}>{opcao}</Text>
-            </TouchableOpacity>
-          ))}
+        <View style={styles.questionCard}>
+          <Text style={styles.questionTitle}>Desafio de Interpretação Eletrocardiográfica</Text>
+          <Text style={styles.questionText}>{paciente.ecg.pergunta}</Text>
         </View>
+
+        <View style={styles.optionsContainer}>
+          {paciente.ecg.opcoes.map((opcao, index) => {
+            const isSelected = opcaoSelecionada === index;
+            return (
+              <TouchableOpacity
+                key={index}
+                activeOpacity={0.85}
+                onPress={() => setOpcaoSelecionada(index)}
+                style={[
+                  styles.optionButton,
+                  isSelected && styles.optionButtonSelected
+                ]}
+              >
+                <Text style={[
+                  styles.optionText,
+                  isSelected && styles.optionTextSelected
+                ]}>
+                  {opcao}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={verificarResposta}
+          style={styles.confirmButton}
+        >
+          <Text style={styles.confirmButtonText}>Assinar Laudo do ECG</Text>
+        </TouchableOpacity>
       </ScrollView>
+
+      {/* Companion Gênio Enfermeiro */}
+      <NurseGenieAvatar
+        dicaTexto={dicaGenioAtual}
+        onDicaSolicitada={() => setDicasSolicitadas(dicasSolicitadas + 1)}
+      />
+
+      <ClinicalFeedbackOverlay
+        visible={overlayConfig.visible}
+        variant={overlayConfig.variant}
+        titulo={overlayConfig.titulo}
+        mensagem={overlayConfig.mensagem}
+        explicacaoMedica={overlayConfig.explicacaoMedica}
+        xpGanhos={overlayConfig.xpGanhos}
+        onConfirm={overlayConfig.onConfirm}
+      />
     </SafeAreaView>
   );
 }
@@ -189,94 +202,128 @@ export default function EcgScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#0F172A',
   },
   appBar: {
     height: 56,
-    backgroundColor: '#1E3A8A',
+    backgroundColor: '#1E293B',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#334155',
     paddingTop: Platform.OS === 'android' ? 24 : 0,
   },
   iconButton: {
-    padding: 16,
+    padding: 12,
   },
   appBarTitle: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
+    color: '#F8FAFC',
+    fontSize: 14,
+    fontWeight: '900',
   },
   container: {
-    padding: 24,
+    padding: 20,
+    paddingBottom: 90,
   },
-  progressText: {
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#9CA3AF',
+  ecgCard: {
+    backgroundColor: '#1E293B',
+    padding: 18,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#059669',
+    marginBottom: 20,
+  },
+  ecgHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 8,
   },
-  questionTitle: {
-    fontSize: 20,
+  ecgTitle: {
+    fontSize: 15,
     fontWeight: 'bold',
-    color: '#1E3A8A',
+    color: '#34D399',
+    marginLeft: 8,
+  },
+  ecgDesc: {
+    fontSize: 13,
+    color: '#A7F3D0',
+    lineHeight: 19,
+  },
+  infoBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0F172A',
+    padding: 8,
+    borderRadius: 8,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  infoBadgeText: {
+    fontSize: 12,
+    color: '#94A3B8',
+    marginLeft: 6,
+  },
+  questionCard: {
+    backgroundColor: '#1E293B',
+    padding: 18,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#334155',
+    marginBottom: 16,
+  },
+  questionTitle: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#34D399',
     marginBottom: 8,
     textAlign: 'center',
   },
   questionText: {
     fontSize: 14,
-    color: '#1F2937',
+    color: '#F8FAFC',
     textAlign: 'center',
-    marginBottom: 24,
-  },
-  ecgMonitorContainer: {
-    height: 200,
-    width: '100%',
-    backgroundColor: '#000000',
-    borderRadius: 16,
-    borderWidth: 4,
-    borderColor: '#9CA3AF',
-    overflow: 'hidden',
-    position: 'relative',
-    marginBottom: 32,
-    shadowColor: '#4CAF50',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 15,
-    elevation: 5,
-  },
-  alertBox: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  alertText: {
-    fontWeight: 'bold',
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-    marginLeft: 4,
+    lineHeight: 20,
   },
   optionsContainer: {
-    flex: 1,
+    marginBottom: 20,
   },
   optionButton: {
-    minHeight: 60,
-    backgroundColor: '#FFFFFF',
-    padding: 16,
+    minHeight: 54,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     borderRadius: 12,
+    backgroundColor: '#1E293B',
     borderWidth: 1,
-    borderColor: '#D1D5DB',
-    marginBottom: 12,
+    borderColor: '#334155',
+    marginBottom: 10,
     justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 1,
+  },
+  optionButtonSelected: {
+    backgroundColor: '#064E3B',
+    borderColor: '#10B981',
+    borderWidth: 2,
   },
   optionText: {
+    fontSize: 14,
+    color: '#F8FAFC',
+  },
+  optionTextSelected: {
+    color: '#A7F3D0',
+    fontWeight: 'bold',
+  },
+  confirmButton: {
+    height: 52,
+    backgroundColor: '#10B981',
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  confirmButtonText: {
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#1F2937',
-    textAlign: 'center',
   },
 });

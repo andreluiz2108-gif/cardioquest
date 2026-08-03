@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -11,16 +11,28 @@ import {
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LogOut, PlusCircle, ClipboardList, PlayCircle, Trophy, ChevronRight, Activity } from 'lucide-react-native';
+import { 
+  LogOut, 
+  PlusCircle, 
+  PlayCircle, 
+  Trophy, 
+  ChevronRight, 
+  Activity,
+  Hospital,
+  Flame,
+  Stethoscope
+} from 'lucide-react-native';
+import HospitalBadgeCard from '../components/ui/HospitalBadgeCard';
+import AdaptiveRecommendationCard from '../components/ui/AdaptiveRecommendationCard';
 
 const NIVEIS = [
-  { nome: 'Estudante Calouro', minXp: 0, cor: '#9CA3AF' }, // gray-400
-  { nome: 'Interno de Enfermagem', minXp: 150, cor: '#3B82F6' }, // blue-500
-  { nome: 'Enfermeiro Júnior', minXp: 300, cor: '#22C55E' }, // green-500
-  { nome: 'Enfermeiro Pleno', minXp: 500, cor: '#A855F7' }, // purple-500
-  { nome: 'Especialista em Cardio', minXp: 700, cor: '#EF4444' }, // red-500
-  { nome: 'Mestre do Plantão', minXp: 850, cor: '#F97316' }, // orange-500
-  { nome: 'Lenda da Enfermagem', minXp: 1000, cor: '#14B8A6' }, // teal-500
+  { nome: 'Estudante Calouro', minXp: 0, cor: '#9CA3AF' },
+  { nome: 'Interno de Enfermagem', minXp: 150, cor: '#3B82F6' },
+  { nome: 'Enfermeiro Júnior', minXp: 300, cor: '#22C55E' },
+  { nome: 'Enfermeiro Pleno', minXp: 500, cor: '#A855F7' },
+  { nome: 'Especialista em Cardio', minXp: 700, cor: '#EF4444' },
+  { nome: 'Mestre do Plantão', minXp: 850, cor: '#F97316' },
+  { nome: 'Lenda da Enfermagem', minXp: 1000, cor: '#14B8A6' },
 ];
 
 export default function DashboardScreen() {
@@ -60,15 +72,6 @@ export default function DashboardScreen() {
     return nivelAtual;
   };
 
-  const obterProximoXp = () => {
-    for (let nivel of NIVEIS) {
-      if (xpAtual < nivel.minXp) {
-        return nivel.minXp;
-      }
-    }
-    return xpAtual;
-  };
-
   const ganharXpTeste = async () => {
     const novoXp = xpAtual + 250;
     setXpAtual(novoXp);
@@ -82,12 +85,12 @@ export default function DashboardScreen() {
     };
 
     if (Platform.OS === 'web') {
-      const confirm = window.confirm('Isto irá apagar todo o seu progresso, XP, cadeados e medalhas. Tem a certeza de que quer começar de novo?');
+      const confirm = window.confirm('Isto irá apagar o seu progresso de plantão. Tem certeza de que quer reiniciar o plantão?');
       if (confirm) performReset();
     } else {
       Alert.alert(
-        'Reiniciar Jogo?',
-        'Isto irá apagar todo o seu progresso, XP, cadeados e medalhas. Tem a certeza de que quer começar de novo?',
+        'Reiniciar Plantão?',
+        'Isto irá apagar o seu progresso de plantão. Tem certeza?',
         [
           { text: 'Cancelar', style: 'cancel' },
           { text: 'Sim, Reiniciar', style: 'destructive', onPress: performReset },
@@ -97,102 +100,98 @@ export default function DashboardScreen() {
   };
 
   const nivelAtual = obterNivelAtual();
-  const proximoXp = obterProximoXp();
-
-  let progresso = 1.0;
-  if (proximoXp > nivelAtual.minXp) {
-    progresso = (xpAtual - nivelAtual.minXp) / (proximoXp - nivelAtual.minXp);
-  }
-
-  // Helper para converter hex color para rgb e adicionar opacidade (cor de fundo do badge)
-  const hexToRgba = (hex: string, alpha: number) => {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {/* AppBar do Centro Médico */}
       <View style={styles.appBar}>
-        <Text style={styles.appBarTitle}>Sala de Plantão</Text>
+        <View style={styles.appBarTitleGroup}>
+          <Hospital color="#FFFFFF" size={22} />
+          <Text style={styles.appBarTitle}>CENTRAL DO PLANTÃO MÉDICO</Text>
+        </View>
         <View style={styles.appBarActions}>
           <TouchableOpacity onPress={sairEResetar} style={styles.iconButton}>
-            <LogOut color="#FFFFFF" size={24} />
+            <LogOut color="#94A3B8" size={20} />
           </TouchableOpacity>
           <TouchableOpacity onPress={ganharXpTeste} style={styles.iconButton}>
-            <PlusCircle color="#FFFFFF" size={24} />
+            <PlusCircle color="#38BDF8" size={20} />
           </TouchableOpacity>
         </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.container}>
-        {/* Card do Usuário */}
-        <View style={styles.userCard}>
-          <View style={styles.avatarBox}>
-            <Text style={styles.avatarEmoji}>{avatar}</Text>
+        {/* Crachá Digital de Identificação */}
+        <HospitalBadgeCard
+          nome={nomeEnfermeiro || 'Profissional de Plantão'}
+          cargo={nivelAtual.nome}
+          avatarEmoji={avatar}
+          xpTotal={xpAtual}
+          corCargo={nivelAtual.cor}
+        />
+
+        {/* Card de Recomendação Adaptativa do Gênio */}
+        <AdaptiveRecommendationCard />
+
+        {/* Banner de Status da Sala de Emergência */}
+        <View style={styles.emergencyStatusBanner}>
+          <View style={styles.statusRow}>
+            <Flame size={20} color="#F97316" />
+            <Text style={styles.statusTitle}>Sala Vermelha / CTI em Atendimento</Text>
           </View>
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>{nomeEnfermeiro}</Text>
-            <View style={{ alignItems: 'flex-start', marginTop: 4 }}>
-              <View style={[styles.badge, { backgroundColor: hexToRgba(nivelAtual.cor, 0.2) }]}>
-                <Text style={[styles.badgeText, { color: nivelAtual.cor }]}>{nivelAtual.nome}</Text>
-              </View>
-            </View>
-            
-            <View style={styles.progressContainer}>
-              <View style={styles.progressBarBg}>
-                <View style={[styles.progressBarFill, { width: `${progresso * 100}%` }]} />
-              </View>
-            </View>
-            <Text style={styles.xpText}>{xpAtual} / {proximoXp} XP</Text>
-          </View>
+          <Text style={styles.statusDesc}>
+            5 Prontuários ativos no leito de emergência com diversas complexidades clínicas.
+          </Text>
         </View>
 
-        <Text style={styles.sectionTitle}>Acesso Rápido</Text>
+        <Text style={styles.sectionTitle}>Comandos de Emergência</Text>
 
-        {/* Prontuário Card */}
+        {/* Prontuários Card UI+ */}
         <TouchableOpacity 
-          activeOpacity={0.8} 
+          activeOpacity={0.85} 
           style={styles.prontuarioCard}
-          onPress={() => router.push('/prontuario')}
+          onPress={() => router.push('/prontuarios')}
         >
-          <ClipboardList color="#FFFFFF" size={40} />
+          <View style={styles.cardIconBox}>
+            <Stethoscope color="#FFFFFF" size={32} />
+          </View>
           <View style={styles.cardTextContainer}>
-            <Text style={styles.cardTitle}>Prontuário: Sr. Carlos</Text>
-            <Text style={styles.cardSubtitle}>Paciente com dor torácica aguda.</Text>
+            <Text style={styles.cardTitle}>Galeria de Prontuários de Leito</Text>
+            <Text style={styles.cardSubtitle}>Atenda os 5 leitos de emergência e aplique as 6 condutas.</Text>
           </View>
           <PlayCircle color="#FFFFFF" size={32} />
         </TouchableOpacity>
 
-        {/* Troféus Card */}
+        {/* Troféus Card UI+ */}
         <TouchableOpacity 
-          activeOpacity={0.8} 
+          activeOpacity={0.85} 
           style={styles.trofeusCard}
           onPress={() => router.push('/trofeus')}
         >
-          <Trophy color="#F59E0B" size={40} />
-          <View style={styles.cardTextContainer}>
-            <Text style={[styles.cardTitle, { color: '#1F2937' }]}>Sala de Troféus</Text>
-            <Text style={[styles.cardSubtitle, { color: '#6B7280' }]}>Veja as suas conquistas clínicas.</Text>
+          <View style={[styles.cardIconBox, { backgroundColor: '#FEF3C7' }]}>
+            <Trophy color="#D97706" size={30} />
           </View>
-          <ChevronRight color="#F59E0B" size={32} />
+          <View style={styles.cardTextContainer}>
+            <Text style={[styles.cardTitle, { color: '#0F172A' }]}>Sala de Conquistas & Medalhas</Text>
+            <Text style={[styles.cardSubtitle, { color: '#64748B' }]}>Conquistas médicas e credenciais de especialização.</Text>
+          </View>
+          <ChevronRight color="#D97706" size={28} />
         </TouchableOpacity>
 
-        {/* Estatísticas Card */}
+        {/* Estatísticas Card UI+ */}
         <TouchableOpacity 
-          activeOpacity={0.8} 
+          activeOpacity={0.85} 
           style={styles.estatisticasCard}
           onPress={() => router.push('/estatisticas')}
         >
-          <Activity color="#10B981" size={40} />
-          <View style={styles.cardTextContainer}>
-            <Text style={[styles.cardTitle, { color: '#1F2937' }]}>Estatísticas</Text>
-            <Text style={[styles.cardSubtitle, { color: '#6B7280' }]}>Veja métricas e o tempo por módulo.</Text>
+          <View style={[styles.cardIconBox, { backgroundColor: '#DCFCE7' }]}>
+            <Activity color="#15803D" size={30} />
           </View>
-          <ChevronRight color="#10B981" size={32} />
+          <View style={styles.cardTextContainer}>
+            <Text style={[styles.cardTitle, { color: '#0F172A' }]}>Métricas de Assertividade</Text>
+            <Text style={[styles.cardSubtitle, { color: '#64748B' }]}>Tempo de resposta e precisão dos diagnósticos.</Text>
+          </View>
+          <ChevronRight color="#15803D" size={28} />
         </TouchableOpacity>
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -201,147 +200,126 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#0F172A',
   },
   appBar: {
     height: 56,
-    backgroundColor: '#1E3A8A',
+    backgroundColor: '#1E293B',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'android' ? 24 : 0, // safe area hack se n tiver safeareaview real
+    borderBottomWidth: 1,
+    borderBottomColor: '#334155',
+    paddingTop: Platform.OS === 'android' ? 24 : 0,
+  },
+  appBarTitleGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   appBarTitle: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: 'bold',
+    color: '#F8FAFC',
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+    marginLeft: 8,
   },
   appBarActions: {
     flexDirection: 'row',
   },
   iconButton: {
     padding: 8,
-    marginLeft: 8,
+    marginLeft: 4,
   },
   container: {
-    padding: 24,
-  },
-  userCard: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
     padding: 20,
-    borderRadius: 16,
-    shadowColor: '#9CA3AF',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 3,
-    marginBottom: 40,
   },
-  avatarBox: {
-    width: 70,
-    height: 70,
-    backgroundColor: '#EFF6FF', // blue-50
+  emergencyStatusBanner: {
+    backgroundColor: '#1E293B',
+    padding: 16,
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#334155',
+    marginBottom: 24,
+  },
+  statusRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    marginBottom: 6,
   },
-  avatarEmoji: {
-    fontSize: 40,
-  },
-  userInfo: {
-    flex: 1,
-    marginLeft: 16,
-    justifyContent: 'center',
-  },
-  userName: {
-    fontSize: 20,
+  statusTitle: {
+    color: '#F8FAFC',
+    fontSize: 14,
     fontWeight: 'bold',
-    color: '#1E3A8A',
+    marginLeft: 8,
   },
-  badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  badgeText: {
+  statusDesc: {
+    color: '#94A3B8',
     fontSize: 12,
-    fontWeight: 'bold',
-  },
-  progressContainer: {
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  progressBarBg: {
-    height: 8,
-    backgroundColor: '#E5E7EB', // gray-200
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#F59E0B', // amber-500
-  },
-  xpText: {
-    fontSize: 10,
-    color: '#9CA3AF',
+    lineHeight: 18,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1F2937',
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#F8FAFC',
     marginBottom: 16,
+    letterSpacing: 0.5,
   },
   prontuarioCard: {
+    backgroundColor: '#2563EB',
+    padding: 18,
+    borderRadius: 18,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2563EB', // approx linear gradient
-    padding: 20,
-    borderRadius: 16,
     marginBottom: 16,
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 4,
   },
   trofeusCard: {
+    backgroundColor: '#FFFFFF',
+    padding: 18,
+    borderRadius: 18,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: '#FCD34D', // amber-300
-    shadowColor: '#F59E0B',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 3,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   estatisticasCard: {
+    backgroundColor: '#FFFFFF',
+    padding: 18,
+    borderRadius: 18,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 16,
-    marginTop: 16,
-    borderWidth: 2,
-    borderColor: '#D1FAE5', // emerald-100
-    shadowColor: '#10B981',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 3,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  cardIconBox: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   cardTextContainer: {
     flex: 1,
-    marginHorizontal: 16,
+    marginLeft: 14,
+    marginRight: 8,
   },
   cardTitle: {
-    color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 2,
   },
   cardSubtitle: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 14,
-    marginTop: 4,
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.8)',
+    lineHeight: 16,
   },
 });

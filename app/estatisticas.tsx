@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -8,248 +8,387 @@ import {
   TouchableOpacity,
   Platform
 } from 'react-native';
-import { router } from 'expo-router';
-import { ArrowLeft, Clock, Target, Activity, Award } from 'lucide-react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// Estado inicial das estatísticas (zeradas)
-const MODULOS_STATS = [
-  { id: 'prontuario', nome: 'Prontuário', tempoMin: 0, acertos: 0, cor: '#3B82F6' },
-  { id: 'triagem', nome: 'Triagem', tempoMin: 0, acertos: 0, cor: '#8B5CF6' },
-  { id: 'ecg', nome: 'ECG', tempoMin: 0, acertos: 0, cor: '#EF4444' },
-  { id: 'enzimas', nome: 'Enzimas', tempoMin: 0, acertos: 0, cor: '#F59E0B' },
-  { id: 'protocolo', nome: 'Protocolo', tempoMin: 0, acertos: 0, cor: '#10B981' },
-  { id: 'alta', nome: 'Alta', tempoMin: 0, acertos: 0, cor: '#14B8A6' },
-];
+import { router, useFocusEffect } from 'expo-router';
+import { 
+  ArrowLeft, 
+  Clock, 
+  Target, 
+  Activity, 
+  Award, 
+  ShieldCheck, 
+  Sparkles,
+  Zap,
+  ChevronRight,
+  Hospital
+} from 'lucide-react-native';
+import { getAggregatedClinicalStats, AggregatedClinicalStats } from '../utils/adaptiveEngine';
 
 export default function EstatisticasScreen() {
-  const [stats, setStats] = useState(MODULOS_STATS);
-  const [xpTotal, setXpTotal] = useState(0);
+  const [stats, setStats] = useState<AggregatedClinicalStats | null>(null);
 
-  useEffect(() => {
-    // Tenta buscar métricas reais, senão usa o mock
-    const loadStats = async () => {
-      try {
-        const xp = await AsyncStorage.getItem('xpEnfermeiro');
-        if (xp) setXpTotal(parseInt(xp, 10));
+  const carregarStats = async () => {
+    const data = await getAggregatedClinicalStats();
+    setStats(data);
+  };
 
-        const savedStats = await AsyncStorage.getItem('estatisticasJogo');
-        if (savedStats) {
-          setStats(JSON.parse(savedStats));
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    };
-    loadStats();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      carregarStats();
+    }, [])
+  );
 
-  const totalTime = stats.reduce((acc, curr) => acc + curr.tempoMin, 0);
-  const averageAccuracy = Math.round(stats.reduce((acc, curr) => acc + curr.acertos, 0) / stats.length);
-  const maxTime = Math.max(...stats.map(s => s.tempoMin));
+  if (!stats) return <View style={styles.safeArea} />;
+
+  const minEcg = Math.floor(stats.tempoMedioPortaEcgSegundos / 60);
+  const secEcg = stats.tempoMedioPortaEcgSegundos % 60;
+  const tempoEcgFormatado = `${minEcg}m ${secEcg}s`;
+
+  const getStatusAcuracia = () => {
+    if (stats.acuraciaGlobal >= 85) return { label: 'Nível Especialista', cor: '#10B981' };
+    if (stats.acuraciaGlobal >= 65) return { label: 'Nível Pleno', cor: '#3B82F6' };
+    return { label: 'Em Treinamento', cor: '#F59E0B' };
+  };
+
+  const statusAcc = getStatusAcuracia();
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.appBar}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
           <ArrowLeft color="#FFFFFF" size={24} />
         </TouchableOpacity>
-        <Text style={styles.appBarTitle}>Métricas de Desempenho</Text>
-        <View style={{ width: 24, paddingHorizontal: 16 }} />
+        <Text style={styles.appBarTitle}>PAINEL TELEMÉTRICO DE ASSERTIVIDADE</Text>
+        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.container}>
-        
-        {/* Resumo Geral */}
-        <View style={styles.summaryContainer}>
-          <View style={[styles.summaryCard, { backgroundColor: '#EFF6FF' }]}>
-            <View style={styles.summaryIconBox}>
-              <Target color="#3B82F6" size={24} />
+        {/* Banner de Sinais de Plantão */}
+        <View style={styles.telemetryBanner}>
+          <View style={styles.gaugeContainer}>
+            <View style={[styles.gaugeCircle, { borderColor: statusAcc.cor }]}>
+              <Text style={[styles.gaugePercent, { color: statusAcc.cor }]}>
+                {stats.acuraciaGlobal}%
+              </Text>
+              <Text style={styles.gaugeSub}>Acurácia</Text>
             </View>
-            <Text style={styles.summaryValue}>{averageAccuracy}%</Text>
-            <Text style={styles.summaryLabel}>Acerto Global</Text>
           </View>
-          
-          <View style={[styles.summaryCard, { backgroundColor: '#FEF2F2' }]}>
-            <View style={[styles.summaryIconBox, { backgroundColor: '#FEE2E2' }]}>
-              <Clock color="#EF4444" size={24} />
+
+          <View style={styles.telemetryInfo}>
+            <View style={[styles.statusBadge, { backgroundColor: `${statusAcc.cor}20`, borderColor: statusAcc.cor }]}>
+              <ShieldCheck size={14} color={statusAcc.cor} />
+              <Text style={[styles.statusBadgeText, { color: statusAcc.cor }]}>{statusAcc.label}</Text>
             </View>
-            <Text style={[styles.summaryValue, { color: '#B91C1C' }]}>{totalTime}m</Text>
-            <Text style={styles.summaryLabel}>Tempo Total</Text>
+            <Text style={styles.telemetryTitle}>Telemetria de Atendimento</Text>
+            <Text style={styles.telemetryDesc}>
+              {stats.sessoesConcluidas} Etapas executadas com autonomia de {stats.taxaAutonomia}%.
+            </Text>
           </View>
         </View>
 
-        <View style={[styles.summaryCardRow, { backgroundColor: '#F0FDF4' }]}>
-          <View style={[styles.summaryIconBox, { backgroundColor: '#DCFCE7' }]}>
-             <Award color="#16A34A" size={24} />
+        {/* Indicadores Principais em Cards Neon */}
+        <View style={styles.cardsGrid}>
+          {/* Card Tempo Porta-ECG */}
+          <View style={[styles.metricCard, { borderColor: '#38BDF8' }]}>
+            <View style={styles.metricHeader}>
+              <Clock color="#38BDF8" size={18} />
+              <Text style={styles.metricLabel}>TEMPO PORTA-ECG</Text>
+            </View>
+            <Text style={[styles.metricValue, { color: '#38BDF8' }]}>{tempoEcgFormatado}</Text>
+            <Text style={styles.metricMeta}>Meta SBC: &lt; 10 min</Text>
           </View>
-          <View style={{ flex: 1, marginLeft: 16 }}>
-            <Text style={styles.summaryLabel}>Experiência (XP)</Text>
-            <Text style={[styles.summaryValue, { color: '#15803D' }]}>{xpTotal} XP Acumulados</Text>
+
+          {/* Card Autonomia Clinica */}
+          <View style={[styles.metricCard, { borderColor: '#A855F7' }]}>
+            <View style={styles.metricHeader}>
+              <Zap color="#C084FC" size={18} />
+              <Text style={styles.metricLabel}>AUTONOMIA</Text>
+            </View>
+            <Text style={[styles.metricValue, { color: '#C084FC' }]}>{stats.taxaAutonomia}%</Text>
+            <Text style={styles.metricMeta}>Sem Dicas do Gênio</Text>
           </View>
         </View>
 
-        {/* Métricas de Acerto */}
-        <Text style={styles.sectionTitle}>Assertividade por Módulo</Text>
-        <View style={styles.card}>
-          {stats.map((modulo, index) => (
-            <View key={`acerto-${modulo.id}`} style={[styles.statRow, index === stats.length - 1 && { borderBottomWidth: 0 }]}>
-              <View style={styles.statInfo}>
-                <Text style={styles.statName}>{modulo.nome}</Text>
-                <Text style={styles.statValue}>{modulo.acertos}%</Text>
+        {/* Radar de Competências Clínicas */}
+        <Text style={styles.sectionTitle}>Radar de Competências Clínicas</Text>
+        <View style={styles.radarCard}>
+          <CompetenciaBar
+            titulo="Raciocínio Diagnóstico (Triagem & Anamnese)"
+            porcentagem={stats.competencias.raciocinioDiagnostico}
+            cor="#3B82F6"
+          />
+          <CompetenciaBar
+            titulo="Precisão Eletrocardiográfica (ECG)"
+            porcentagem={stats.competencias.precisaoEcg}
+            cor="#22C55E"
+          />
+          <CompetenciaBar
+            titulo="Segurança Farmacológica (Protocolo MONABESH)"
+            porcentagem={stats.competencias.segurancaFarmacologica}
+            cor="#A855F7"
+          />
+          <CompetenciaBar
+            titulo="Visão Longitudinal & Prevenção (Biomarcadores & Alta)"
+            porcentagem={stats.competencias.visaoPrevensao}
+            cor="#14B8A6"
+          />
+        </View>
+
+        {/* Status por Leito de Emergência */}
+        <Text style={styles.sectionTitle}>Status dos Leitos da Sala Vermelha</Text>
+        <View style={styles.leitosCardContainer}>
+          {stats.pacientesProgresso.map((p, idx) => (
+            <TouchableOpacity
+              key={p.patientId}
+              activeOpacity={0.85}
+              onPress={() => router.push(`/prontuario?patientId=${p.patientId}`)}
+              style={styles.leitoRow}
+            >
+              <View style={styles.leitoNumberBadge}>
+                <Text style={styles.leitoNumberText}>0{idx + 1}</Text>
               </View>
-              <View style={styles.progressBarContainer}>
-                <View style={[styles.progressBarFill, { width: `${modulo.acertos}%`, backgroundColor: modulo.cor }]} />
+              <View style={styles.leitoInfo}>
+                <Text style={styles.leitoNome}>{p.nome}</Text>
+                <Text style={styles.leitoStatus}>{p.status}</Text>
               </View>
-            </View>
+              <View style={styles.leitoProgressBox}>
+                <Text style={styles.leitoPercentText}>{p.progresso}%</Text>
+                <ChevronRight color="#94A3B8" size={20} />
+              </View>
+            </TouchableOpacity>
           ))}
         </View>
-
-        {/* Tempo Gasto */}
-        <Text style={styles.sectionTitle}>Tempo Gasto (minutos)</Text>
-        <View style={styles.card}>
-          {stats.map((modulo, index) => {
-            const timePercentage = maxTime > 0 ? (modulo.tempoMin / maxTime) * 100 : 0;
-            return (
-              <View key={`tempo-${modulo.id}`} style={[styles.statRow, index === stats.length - 1 && { borderBottomWidth: 0 }]}>
-                <View style={styles.statInfo}>
-                  <Text style={styles.statName}>{modulo.nome}</Text>
-                  <Text style={styles.statValue}>{modulo.tempoMin} min</Text>
-                </View>
-                <View style={styles.progressBarContainer}>
-                  <View style={[styles.progressBarFill, { width: `${timePercentage}%`, backgroundColor: '#9CA3AF' }]} />
-                </View>
-              </View>
-            );
-          })}
-        </View>
-
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+const CompetenciaBar = ({ titulo, porcentagem, cor }: { titulo: string; porcentagem: number; cor: string }) => (
+  <View style={styles.compContainer}>
+    <View style={styles.compHeader}>
+      <Text style={styles.compTitle}>{titulo}</Text>
+      <Text style={[styles.compPercent, { color: cor }]}>{porcentagem}%</Text>
+    </View>
+    <View style={styles.barTrack}>
+      <View style={[styles.barFill, { width: `${porcentagem}%`, backgroundColor: cor }]} />
+    </View>
+  </View>
+);
+
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#0F172A',
   },
   appBar: {
     height: 56,
-    backgroundColor: '#1E3A8A',
+    backgroundColor: '#1E293B',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#334155',
     paddingTop: Platform.OS === 'android' ? 24 : 0,
   },
-  backButton: {
-    padding: 16,
+  iconButton: {
+    padding: 12,
   },
   appBarTitle: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: 'bold',
+    color: '#F8FAFC',
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 0.8,
   },
   container: {
-    padding: 24,
+    padding: 20,
   },
-  summaryContainer: {
+  telemetryBanner: {
+    backgroundColor: '#1E293B',
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#334155',
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  gaugeContainer: {
+    marginRight: 16,
+  },
+  gaugeCircle: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    borderWidth: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#0F172A',
+  },
+  gaugePercent: {
+    fontSize: 22,
+    fontWeight: '900',
+  },
+  gaugeSub: {
+    fontSize: 10,
+    color: '#94A3B8',
+    fontWeight: 'bold',
+  },
+  telemetryInfo: {
+    flex: 1,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 6,
+  },
+  statusBadgeText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    marginLeft: 4,
+  },
+  telemetryTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#F8FAFC',
+  },
+  telemetryDesc: {
+    fontSize: 12,
+    color: '#94A3B8',
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  cardsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 20,
   },
-  summaryCard: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
+  metricCard: {
+    backgroundColor: '#1E293B',
     borderRadius: 16,
     padding: 16,
-    marginHorizontal: 4,
-    alignItems: 'center',
-    flexDirection: 'column',
-    shadowColor: '#9CA3AF',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    flex: 0.48,
+    borderWidth: 1.5,
   },
-  summaryCardRow: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
-    alignItems: 'center',
+  metricHeader: {
     flexDirection: 'row',
-    shadowColor: '#9CA3AF',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  summaryIconBox: {
-    width: 48,
-    height: 48,
-    backgroundColor: '#DBEAFE',
-    borderRadius: 12,
     alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: 8,
   },
-  summaryValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1E3A8A',
+  metricLabel: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#94A3B8',
+    marginLeft: 6,
+    letterSpacing: 0.5,
   },
-  summaryLabel: {
-    fontSize: 12,
-    color: '#6B7280',
-    fontWeight: '500',
+  metricValue: {
+    fontSize: 22,
+    fontWeight: '900',
+    marginBottom: 2,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+  },
+  metricMeta: {
+    fontSize: 11,
+    color: '#64748B',
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1F2937',
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#F8FAFC',
     marginBottom: 12,
-    marginTop: 8,
+    letterSpacing: 0.5,
   },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
+  radarCard: {
+    backgroundColor: '#1E293B',
+    borderRadius: 18,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: '#334155',
     marginBottom: 24,
-    shadowColor: '#9CA3AF',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
   },
-  statRow: {
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+  compContainer: {
+    marginBottom: 14,
   },
-  statInfo: {
+  compHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 6,
   },
-  statName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#334155',
-  },
-  statValue: {
-    fontSize: 14,
+  compTitle: {
+    fontSize: 12,
     fontWeight: 'bold',
-    color: '#1F2937',
+    color: '#F8FAFC',
   },
-  progressBarContainer: {
+  compPercent: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  barTrack: {
     height: 8,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#0F172A',
     borderRadius: 4,
     overflow: 'hidden',
   },
-  progressBarFill: {
+  barFill: {
     height: '100%',
     borderRadius: 4,
+  },
+  leitosCardContainer: {
+    backgroundColor: '#1E293B',
+    borderRadius: 18,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#334155',
+    marginBottom: 24,
+  },
+  leitoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#334155',
+  },
+  leitoNumberBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#334155',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  leitoNumberText: {
+    color: '#F8FAFC',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  leitoInfo: {
+    flex: 1,
+  },
+  leitoNome: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#F8FAFC',
+  },
+  leitoStatus: {
+    fontSize: 11,
+    color: '#94A3B8',
+    marginTop: 2,
+  },
+  leitoProgressBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  leitoPercentText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#38BDF8',
+    marginRight: 6,
   },
 });

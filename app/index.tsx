@@ -7,12 +7,11 @@ import {
   StyleSheet, 
   SafeAreaView, 
   ScrollView,
-  Platform,
-  Alert
+  Platform
 } from 'react-native';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { HeartPulse, IdCard, ArrowRight } from 'lucide-react-native';
+import { HeartPulse, IdCard, ArrowRight, Hospital } from 'lucide-react-native';
 
 const avatares = ['👨‍⚕️', '👩‍⚕️', '🧑‍⚕️', '👨🏿‍⚕️', '👩🏽‍⚕️', '👱‍♀️'];
 
@@ -20,6 +19,7 @@ export default function WelcomeScreen() {
   const [nomeEnfermeiro, setNomeEnfermeiro] = useState('');
   const [avatarSelecionado, setAvatarSelecionado] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [erroMsg, setErroMsg] = useState('');
 
   useEffect(() => {
     async function checkLogin() {
@@ -40,11 +40,7 @@ export default function WelcomeScreen() {
 
   const baterPonto = async () => {
     if (!nomeEnfermeiro.trim()) {
-      if (Platform.OS === 'web') {
-        window.alert('Por favor, digite seu nome no crachá.');
-      } else {
-        Alert.alert('Aviso', 'Por favor, digite seu nome no crachá.');
-      }
+      setErroMsg('Por favor, digite seu nome de registro no crachá.');
       return;
     }
 
@@ -58,58 +54,78 @@ export default function WelcomeScreen() {
   };
 
   if (loading) {
-    return <View style={styles.container} />; // Tela em branco enquanto verifica auth
+    return <View style={styles.safeArea} />;
   }
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
-          <HeartPulse color="#DC2626" size={40} />
+          <HeartPulse color="#EF4444" size={42} />
           <Text style={styles.headerText}>CardioQuest</Text>
         </View>
 
-        <Text style={styles.title}>Identificação Profissional</Text>
-        <Text style={styles.subtitle}>Configure seu crachá para iniciar o plantão.</Text>
+        <View style={styles.badgeFormCard}>
+          <View style={styles.badgeHeader}>
+            <Hospital color="#38BDF8" size={20} />
+            <Text style={styles.badgeHeaderTitle}>ADMISSÃO • CRACHÁ DE PLANTÃO</Text>
+          </View>
 
-        <Text style={styles.label}>NOME DO ENFERMEIRO(A)</Text>
-        <View style={styles.inputContainer}>
-          <IdCard color="#9CA3AF" size={24} style={styles.inputIcon} />
-          <TextInput
-            style={styles.input}
-            placeholder="Digite seu nome..."
-            placeholderTextColor="#9CA3AF"
-            value={nomeEnfermeiro}
-            onChangeText={setNomeEnfermeiro}
-          />
+          <Text style={styles.title}>Emissão de Crachá Médico</Text>
+          <Text style={styles.subtitle}>
+            Digite o seu nome de registro profissional para assumir o plantão no Centro de Emergência Cardiológica (UNICAMP).
+          </Text>
+
+          {erroMsg ? (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorBoxText}>{erroMsg}</Text>
+            </View>
+          ) : null}
+
+          <Text style={styles.label}>NOME DO PROFISSIONAL / ESTUDANTE</Text>
+          <View style={styles.inputContainer}>
+            <IdCard color="#64748B" size={22} style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Ex: Dra. Mariana / Enf. Lucas"
+              placeholderTextColor="#64748B"
+              value={nomeEnfermeiro}
+              onChangeText={(txt) => {
+                setNomeEnfermeiro(txt);
+                setErroMsg('');
+              }}
+            />
+          </View>
+
+          <Text style={styles.label}>SELECIONE SEU AVATAR HOSPITALAR</Text>
+          <View style={styles.avatarContainer}>
+            {avatares.map((avatar, index) => {
+              const isSelected = avatarSelecionado === index;
+              return (
+                <TouchableOpacity
+                  key={index}
+                  activeOpacity={0.75}
+                  onPress={() => setAvatarSelecionado(index)}
+                  style={[
+                    styles.avatarBox,
+                    isSelected && styles.avatarBoxSelected
+                  ]}
+                >
+                  <Text style={styles.avatarEmoji}>{avatar}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={baterPonto}
+            style={styles.button}
+          >
+            <Text style={styles.buttonText}>Bater Ponto & Assumir Plantão</Text>
+            <ArrowRight color="#FFFFFF" size={22} />
+          </TouchableOpacity>
         </View>
-
-        <Text style={styles.label}>SELECIONE SEU AVATAR</Text>
-        <View style={styles.avatarContainer}>
-          {avatares.map((avatar, index) => {
-            const isSelected = avatarSelecionado === index;
-            return (
-              <TouchableOpacity
-                key={index}
-                activeOpacity={0.7}
-                onPress={() => setAvatarSelecionado(index)}
-                style={[
-                  styles.avatarBox,
-                  isSelected && styles.avatarBoxSelected
-                ]}
-              >
-                <Text style={styles.avatarEmoji}>{avatar}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        <View style={styles.spacer} />
-
-        <TouchableOpacity style={styles.button} activeOpacity={0.8} onPress={baterPonto}>
-          <Text style={styles.buttonText}>Bater Ponto</Text>
-          <ArrowRight color="#FFFFFF" size={24} />
-        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -118,106 +134,144 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#0F172A',
   },
   container: {
     padding: 24,
-    paddingTop: Platform.OS === 'android' ? 40 : 24,
-    flexGrow: 1,
+    justifyContent: 'center',
+    minHeight: '100%',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 40,
-    marginTop: 16,
+    justifyContent: 'center',
+    marginBottom: 24,
   },
   headerText: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1E3A8A',
-    marginLeft: 12,
+    fontSize: 30,
+    fontWeight: '900',
+    color: '#F8FAFC',
+    marginLeft: 10,
+    letterSpacing: 0.5,
+  },
+  badgeFormCard: {
+    backgroundColor: '#1E293B',
+    borderRadius: 20,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: '#334155',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 6,
+  },
+  badgeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    backgroundColor: '#0F172A',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  badgeHeaderTitle: {
+    color: '#38BDF8',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+    marginLeft: 8,
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 8,
+    color: '#F8FAFC',
+    marginBottom: 6,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#6B7280',
-    marginBottom: 32,
+    fontSize: 13,
+    color: '#94A3B8',
+    marginBottom: 20,
+    lineHeight: 18,
   },
-  label: {
+  errorBox: {
+    backgroundColor: '#451A03',
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#78350F',
+    marginBottom: 16,
+  },
+  errorBoxText: {
+    color: '#FDE047',
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#9CA3AF',
+    textAlign: 'center',
+  },
+  label: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#94A3B8',
     marginBottom: 8,
+    letterSpacing: 0.5,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#0F172A',
     borderRadius: 12,
-    marginBottom: 32,
-    paddingHorizontal: 12,
-    height: 56,
+    borderWidth: 1,
+    borderColor: '#334155',
+    marginBottom: 20,
+    paddingHorizontal: 14,
   },
   inputIcon: {
-    marginRight: 8,
+    marginRight: 10,
   },
   input: {
     flex: 1,
-    height: '100%',
-    fontSize: 16,
-    color: '#1F2937',
-    outlineStyle: 'none' // For web
-  } as any,
+    height: 52,
+    color: '#F8FAFC',
+    fontSize: 15,
+  },
   avatarContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
+    justifyContent: 'space-between',
+    marginBottom: 28,
   },
   avatarBox: {
-    width: 60,
-    height: 60,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: 'transparent',
-    alignItems: 'center',
+    width: 46,
+    height: 46,
+    borderRadius: 12,
+    backgroundColor: '#0F172A',
     justifyContent: 'center',
-    shadowColor: '#9CA3AF',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#334155',
   },
   avatarBoxSelected: {
-    backgroundColor: '#DBEAFE', // blue-100
-    borderColor: '#3B82F6', // blue-500
+    borderColor: '#38BDF8',
+    borderWidth: 2,
+    backgroundColor: '#1E3A8A',
   },
   avatarEmoji: {
-    fontSize: 32,
-  },
-  spacer: {
-    flex: 1,
-    minHeight: 60,
+    fontSize: 24,
   },
   button: {
-    width: '100%',
-    height: 56,
-    backgroundColor: '#1E3A8A',
-    borderRadius: 12,
+    backgroundColor: '#2563EB',
+    height: 54,
+    borderRadius: 14,
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Platform.OS === 'ios' ? 16 : 0,
+    alignItems: 'center',
   },
   buttonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
     color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
     marginRight: 8,
   },
 });

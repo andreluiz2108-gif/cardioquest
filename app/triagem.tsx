@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -6,91 +6,150 @@ import {
   SafeAreaView, 
   ScrollView, 
   TouchableOpacity, 
-  Platform,
-  Alert
+  Platform
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ArrowLeft, CheckCircle } from 'lucide-react-native';
-
-const PERGUNTAS = [
-  {
-    titulo: 'Passo 1: Classificação',
-    texto: 'Paciente relata dor no peito (nível 9/10) tipo aperto, que começou há 40 minutos. A dor sobe para o pescoço e desce pelo braço esquerdo. Pálido e a suar frio.\n\nQual a classificação de risco (Manchester)?',
-    opcoes: ['Emergência (0 min) - Vermelho', 'Muito Urgente (10 min) - Laranja', 'Urgente (60 min) - Amarelo', 'Pouco Urgente (120 min) - Verde', 'Não Urgente (240 min) - Azul'],
-    correta: 0,
-    usarCores: true,
-  },
-  {
-    titulo: 'Passo 2: Conduta Imediata',
-    texto: 'Classificação Vermelha confirmada!\n\nQual deve ser a sua PRIMEIRA ação de enfermagem?',
-    opcoes: [
-      'Pedir ao paciente para aguardar sentado na receção.',
-      'Encaminhar para a sala de emergência e solicitar ECG em até 10 minutos.',
-      'Aferir apenas a temperatura e dar um analgésico simples.',
-      'Preencher o registo de admissão completo antes de chamar o médico.'
-    ],
-    correta: 1,
-    usarCores: false,
-  },
-  {
-    titulo: 'Passo 3: Monitorização',
-    texto: 'O paciente está na sala de emergência a aguardar o ECG.\n\nAlém do eletrocardiograma, qual a monitorização inicial prioritária?',
-    opcoes: [
-      'Apenas frequência cardíaca.',
-      'Medição da glicemia capilar isolada.',
-      'Monitorização contínua (Sinais Vitais, Oximetria e Acesso Venoso).',
-      'Apenas a pressão arterial a cada 30 minutos.'
-    ],
-    correta: 2,
-    usarCores: false,
-  }
-];
+import { ArrowLeft } from 'lucide-react-native';
+import { getPatientById } from '../data/patientsData';
+import { getGenieHint, saveSessionPerformance } from '../utils/adaptiveEngine';
+import PatientMonitorHeader from '../components/ui/PatientMonitorHeader';
+import ClinicalFeedbackOverlay from '../components/ui/ClinicalFeedbackOverlay';
+import NurseGenieAvatar from '../components/ui/NurseGenieAvatar';
 
 const CORES_MANCHESTER = ['#EF4444', '#F97316', '#F59E0B', '#22C55E', '#3B82F6'];
 
 export default function TriagemScreen() {
-  const [perguntaAtual, setPerguntaAtual] = useState(0);
+  const params = useLocalSearchParams<{ patientId?: string }>();
+  const patientId = params.patientId || 'carlos';
+  const paciente = getPatientById(patientId);
 
-  const showAlert = (title: string, message: string, onSuccess?: () => void) => {
-    if (Platform.OS === 'web') {
-      window.alert(`${title}\n\n${message}`);
-      if (onSuccess) onSuccess();
-    } else {
-      Alert.alert(title, message, [{ text: 'Continuar', onPress: onSuccess }]);
+  const [perguntaAtual, setPerguntaAtual] = useState(0);
+  const [acertos, setAcertos] = useState(0);
+  const [erros, setErros] = useState(0);
+  const [dicasSolicitadas, setDicasSolicitadas] = useState(0);
+  const [tempoInicio] = useState<number>(Date.now());
+
+  const [overlayConfig, setOverlayConfig] = useState<{
+    visible: boolean;
+    variant: 'success' | 'warning' | 'completion';
+    titulo: string;
+    mensagem: string;
+    explicacaoMedica?: string;
+    xpGanhos?: number;
+    onConfirm: () => void;
+  }>({
+    visible: false,
+    variant: 'success',
+    titulo: '',
+    mensagem: '',
+    onConfirm: () => {},
+  });
+
+  const PERGUNTAS = [
+    {
+      titulo: `Passo 1: Triagem do Paciente ${paciente.nome}`,
+      texto: `Paciente ${paciente.nome} (${paciente.idade}a): ${paciente.triagem.pergunta}`,
+      opcoes: paciente.triagem.opcoes,
+      correta: paciente.triagem.correta,
+      usarCores: true,
+      explicacao: paciente.triagem.explicacao
+    },
+    {
+      titulo: 'Passo 2: Conduta Imediata de Enfermagem',
+      texto: `Triagem confirmada como prioritária (${paciente.triagem.classificacaoEsperada})!\n\nQual deve ser a sua PRIMEIRA ação de atendimento imediato?`,
+      opcoes: [
+        'Pedir ao paciente para aguardar sentado na recepção geral.',
+        'Encaminhar à Sala Vermelha/Emergência e solicitar ECG em até 10 minutos (Porta-ECG).',
+        'Aferir apenas a temperatura e oferecer analgésico comum.',
+        'Preencher o registro cadastral completo antes de chamar o médico.'
+      ],
+      correta: 1,
+      usarCores: false,
+      explicacao: 'ECG em até 10 minutos (Porta-ECG) com transferência imediata para sala de emergência equipada é a meta recomendada pelas diretrizes.'
+    },
+    {
+      titulo: 'Passo 3: Monitorização Inicial Integrada',
+      texto: 'O paciente encontra-se na sala de emergência sob cuidados iniciais.\n\nAlém do eletrocardiograma, qual a monitorização imediata obrigatória?',
+      opcoes: [
+        'Apenas frequência cardíaca.',
+        'Medição de glicemia capilar isolada.',
+        'Monitorização contínua de Sinais Vitais, Oximetria de pulso e Acesso Venoso Calibroso.',
+        'Apenas pressão arterial a cada 60 minutos.'
+      ],
+      correta: 2,
+      usarCores: false,
+      explicacao: 'A monitorização multiparamétrica contínua garante detecção imediata de arritmias letais ou descompensação hemodinâmica.'
     }
-  };
+  ];
 
   const verificarResposta = async (indiceEscolhido: number) => {
-    if (indiceEscolhido === PERGUNTAS[perguntaAtual].correta) {
+    const pergunta = PERGUNTAS[perguntaAtual];
+    const acertou = indiceEscolhido === pergunta.correta;
+
+    if (acertou) {
+      const novosAcertos = acertos + 1;
+      setAcertos(novosAcertos);
+
       if (perguntaAtual < PERGUNTAS.length - 1) {
-        if (Platform.OS === 'web') {
-          // Toast opcional na web, mas podemos so avancar
-        } else {
-          // Em react native poderiamos usar Toast, simulado por alert simple
-        }
         setPerguntaAtual(perguntaAtual + 1);
       } else {
-        // Acertou a ultima
         try {
           const xpRaw = await AsyncStorage.getItem('xpEnfermeiro');
           const xpAtual = xpRaw ? parseInt(xpRaw, 10) : 0;
           await AsyncStorage.setItem('xpEnfermeiro', (xpAtual + 150).toString());
-          await AsyncStorage.setItem('venceu_mod1', 'true');
+          
+          await AsyncStorage.setItem(`venceu_mod1_paciente_${patientId}`, 'true');
+          if (patientId === 'carlos') {
+            await AsyncStorage.setItem('venceu_mod1', 'true');
+          }
 
-          showAlert('Triagem Concluída!', 'Excelente raciocínio clínico em todas as etapas! O paciente foi classificado e monitorizado corretamente a tempo.\n\nGanhou +150 XP!', () => {
-            router.back();
+          // Avaliação pelo Motor Adaptativo
+          const tempoTotalSegundos = Math.round((Date.now() - tempoInicio) / 1000);
+          const avaliacao = await saveSessionPerformance({
+            patientId,
+            moduloId: 'triagem',
+            totalPerguntas: PERGUNTAS.length,
+            acertos: novosAcertos,
+            erros,
+            tempoTotalSegundos,
+            dicasSolicitadas,
+            timestamp: new Date().toISOString()
+          });
+
+          setOverlayConfig({
+            visible: true,
+            variant: 'success',
+            titulo: 'Triagem Impecável Concluída!',
+            mensagem: `Excelente raciocínio clínico! O(a) paciente ${paciente.nome} foi triado(a) corretamente.\n\n${avaliacao.mensagemGenio}`,
+            explicacaoMedica: pergunta.explicacao,
+            xpGanhos: 150,
+            onConfirm: () => {
+              setOverlayConfig(prev => ({ ...prev, visible: false }));
+              router.back();
+            }
           });
         } catch (e) {
           console.error(e);
         }
       }
     } else {
-      showAlert('Atenção', 'Conduta incorreta. Reveja os protocolos de Síndrome Coronariana Aguda e tente novamente.');
+      setErros(erros + 1);
+      setOverlayConfig({
+        visible: true,
+        variant: 'warning',
+        titulo: 'Alerta de Protocolo Clínico',
+        mensagem: 'A conduta selecionada não respeita o protocolo de prioridade de emergência.',
+        explicacaoMedica: pergunta.explicacao,
+        onConfirm: () => {
+          setOverlayConfig(prev => ({ ...prev, visible: false }));
+        }
+      });
     }
   };
 
   const pergunta = PERGUNTAS[perguntaAtual];
+  const dicaGenioAtual = getGenieHint(patientId, 0, perguntaAtual);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -98,9 +157,15 @@ export default function TriagemScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
           <ArrowLeft color="#FFFFFF" size={24} />
         </TouchableOpacity>
-        <Text style={styles.appBarTitle}>Módulo 1: Triagem</Text>
+        <Text style={styles.appBarTitle}>Módulo 1: Triagem ({paciente.nome})</Text>
         <View style={{ width: 40 }} />
       </View>
+
+      <PatientMonitorHeader
+        nomePaciente={paciente.nome}
+        sinaisVitais={paciente.anamnese.sinaisVitais}
+        estadoAlarme={paciente.complexidade >= 4 ? 'critico' : 'atencao'}
+      />
 
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.progressText}>
@@ -116,12 +181,12 @@ export default function TriagemScreen() {
           {pergunta.opcoes.map((opcao, index) => {
             const bgColor = pergunta.usarCores ? CORES_MANCHESTER[index] : '#FFFFFF';
             const textColor = pergunta.usarCores ? '#FFFFFF' : '#1F2937';
-            const borderColor = pergunta.usarCores ? 'transparent' : '#D1D5DB';
+            const borderColor = pergunta.usarCores ? 'transparent' : '#CBD5E1';
 
             return (
               <TouchableOpacity
                 key={index}
-                activeOpacity={0.8}
+                activeOpacity={0.85}
                 onPress={() => verificarResposta(index)}
                 style={[
                   styles.optionButton,
@@ -130,7 +195,7 @@ export default function TriagemScreen() {
               >
                 <Text style={[
                   styles.optionText,
-                  { color: textColor, textAlign: pergunta.usarCores ? 'center' : 'left', fontWeight: pergunta.usarCores ? 'bold' : 'normal' }
+                  { color: textColor, textAlign: pergunta.usarCores ? 'center' : 'left', fontWeight: pergunta.usarCores ? 'bold' : '500' }
                 ]}>
                   {opcao}
                 </Text>
@@ -139,6 +204,23 @@ export default function TriagemScreen() {
           })}
         </View>
       </ScrollView>
+
+      {/* Companion Gênio Enfermeiro da Lâmpada no Canto Inferior Direito */}
+      <NurseGenieAvatar
+        dicaTexto={dicaGenioAtual}
+        onDicaSolicitada={() => setDicasSolicitadas(dicasSolicitadas + 1)}
+      />
+
+      {/* Overlay de Feedback UI+ */}
+      <ClinicalFeedbackOverlay
+        visible={overlayConfig.visible}
+        variant={overlayConfig.variant}
+        titulo={overlayConfig.titulo}
+        mensagem={overlayConfig.mensagem}
+        explicacaoMedica={overlayConfig.explicacaoMedica}
+        xpGanhos={overlayConfig.xpGanhos}
+        onConfirm={overlayConfig.onConfirm}
+      />
     </SafeAreaView>
   );
 }
@@ -146,75 +228,73 @@ export default function TriagemScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#0F172A',
   },
   appBar: {
     height: 56,
-    backgroundColor: '#1E3A8A',
+    backgroundColor: '#1E293B',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#334155',
     paddingTop: Platform.OS === 'android' ? 24 : 0,
   },
   iconButton: {
-    padding: 16,
+    padding: 12,
   },
   appBarTitle: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
+    color: '#F8FAFC',
+    fontSize: 14,
+    fontWeight: '900',
   },
   container: {
-    padding: 24,
+    padding: 20,
+    paddingBottom: 90, // Espaço para não cobrir pelo Gênio
   },
   progressText: {
     textAlign: 'center',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 'bold',
-    color: '#9CA3AF',
-    marginBottom: 8,
+    color: '#94A3B8',
+    marginBottom: 12,
   },
   questionCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1E293B',
     padding: 20,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: '#DBEAFE', // blue-100
-    shadowColor: '#3B82F6', // blue-500
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
-    marginBottom: 32,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#334155',
+    marginBottom: 20,
   },
   questionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#1E3A8A',
-    marginBottom: 16,
+    color: '#38BDF8',
+    marginBottom: 12,
     textAlign: 'center',
   },
   questionText: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 14,
+    color: '#F1F5F9',
     textAlign: 'center',
-    color: '#1F2937',
-    lineHeight: 24,
+    lineHeight: 22,
   },
   optionsContainer: {
     flex: 1,
   },
   optionButton: {
-    minHeight: 60,
+    minHeight: 56,
     paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: 14,
+    borderRadius: 14,
     borderWidth: 1,
     marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
   },
   optionText: {
-    fontSize: 15,
+    fontSize: 14,
   },
 });

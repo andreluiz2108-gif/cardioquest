@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(./docs/**)",
+      "Read(./app/**)",
+      "Read(./assets/**)",
+      "Read(./components/**)",
+      "Read(./services/**)",
+      "Read(./hooks/**)",
+      "Read(./utils/**)",
+      "Edit(./app/**)",
+      "Edit(./components/**)",
+      "Edit(./services/**)",
+      "Edit(./hooks/**)",
+      "Edit(./utils/**)",
+      "Edit(./docs/**)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(pnpm *)",
+      "Bash(graphify *)"
+    ],
+    "deny": [
+      "Read(./.env*)",
+      "Read(./**/.env*)",
+      "Read(./**/secrets/**)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)",
+      "Bash(rm -rf *)",
+      "Bash(chmod 777 *)",
+      "Bash(curl * | bash)",
+      "Bash(wget * | sh)",
+      "Bash(git push --force*)"
+    ],
+    "ask": [
+      "Bash(git push *)",
+      "Bash(npm publish*)",
+      "Bash(*deploy*)"
+    ]
+  }
+}

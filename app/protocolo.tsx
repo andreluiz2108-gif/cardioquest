@@ -4,80 +4,109 @@ import {
   Text, 
   StyleSheet, 
   SafeAreaView, 
+  ScrollView, 
   TouchableOpacity, 
-  Platform,
-  Alert
+  Platform
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ArrowLeft, Pill, Bandage } from 'lucide-react-native';
-
-const MEDICAMENTOS = [
-  "Aspirina (AAS)",
-  "Adrenalina",
-  "Oxigênio",
-  "Furosemida",
-  "Morfina",
-  "Dipirona",
-  "Nitrato",
-  "Amoxicilina"
-];
-
-const GABARITO_MONA = [
-  "Morfina",
-  "Oxigênio",
-  "Nitrato",
-  "Aspirina (AAS)"
-];
+import { ArrowLeft, Pill, AlertTriangle } from 'lucide-react-native';
+import { getPatientById } from '../data/patientsData';
+import { getGenieHint, saveSessionPerformance } from '../utils/adaptiveEngine';
+import PatientMonitorHeader from '../components/ui/PatientMonitorHeader';
+import ClinicalFeedbackOverlay from '../components/ui/ClinicalFeedbackOverlay';
+import NurseGenieAvatar from '../components/ui/NurseGenieAvatar';
 
 export default function ProtocoloScreen() {
-  const [selecionados, setSelecionados] = useState<string[]>([]);
+  const params = useLocalSearchParams<{ patientId?: string }>();
+  const patientId = params.patientId || 'carlos';
+  const paciente = getPatientById(patientId);
 
-  const showAlert = (title: string, message: string, onSuccess?: () => void) => {
-    if (Platform.OS === 'web') {
-      window.alert(`${title}\n\n${message}`);
-      if (onSuccess) onSuccess();
-    } else {
-      Alert.alert(title, message, [{ text: 'Continuar', onPress: onSuccess }]);
+  const [opcaoSelecionada, setOpcaoSelecionada] = useState<number | null>(null);
+  const [erros, setErros] = useState(0);
+  const [dicasSolicitadas, setDicasSolicitadas] = useState(0);
+  const [tempoInicio] = useState<number>(Date.now());
+
+  const [overlayConfig, setOverlayConfig] = useState<{
+    visible: boolean;
+    variant: 'success' | 'warning' | 'completion';
+    titulo: string;
+    mensagem: string;
+    explicacaoMedica?: string;
+    xpGanhos?: number;
+    onConfirm: () => void;
+  }>({
+    visible: false,
+    variant: 'success',
+    titulo: '',
+    mensagem: '',
+    onConfirm: () => {},
+  });
+
+  const verificarResposta = async () => {
+    if (opcaoSelecionada === null) {
+      setOverlayConfig({
+        visible: true,
+        variant: 'warning',
+        titulo: 'Prescrição Pendente',
+        mensagem: 'Selecione uma conduta terapêutica antes de enviar ao centro cirúrgico.',
+        onConfirm: () => setOverlayConfig(prev => ({ ...prev, visible: false }))
+      });
+      return;
     }
-  };
 
-  const alternarMedicamento = (remedio: string) => {
-    if (selecionados.includes(remedio)) {
-      setSelecionados(prev => prev.filter(r => r !== remedio));
-    } else {
-      if (selecionados.length < 4) {
-        setSelecionados(prev => [...prev, remedio]);
-      } else {
-        if (Platform.OS === 'web') {
-          // Toast opcional na web
-        } else {
-          // Toast em mobile
-        }
-      }
-    }
-  };
-
-  const confirmarProtocolo = async () => {
-    const acertouTudo = selecionados.length === 4 && selecionados.every(remedio => GABARITO_MONA.includes(remedio));
-
-    if (acertouTudo) {
+    if (opcaoSelecionada === paciente.protocolo.correta) {
       try {
         const xpRaw = await AsyncStorage.getItem('xpEnfermeiro');
         const xpAtual = xpRaw ? parseInt(xpRaw, 10) : 0;
         await AsyncStorage.setItem('xpEnfermeiro', (xpAtual + 250).toString());
-        await AsyncStorage.setItem('venceu_mod4', 'true');
+        
+        await AsyncStorage.setItem(`venceu_mod4_paciente_${patientId}`, 'true');
+        if (patientId === 'carlos') {
+          await AsyncStorage.setItem('venceu_mod4', 'true');
+        }
 
-        showAlert('Protocolo MONA!', 'Excelente atuação! Você administrou a medicação correta (Morfina, Oxigênio, Nitrato e AAS). A dor do paciente diminuiu e a isquemia está sendo combatida.\n\nVocê ganhou +250 XP!', () => {
-          router.back();
+        const tempoTotalSegundos = Math.round((Date.now() - tempoInicio) / 1000);
+        const avaliacao = await saveSessionPerformance({
+          patientId,
+          moduloId: 'protocolo',
+          totalPerguntas: 1,
+          acertos: 1,
+          erros,
+          tempoTotalSegundos,
+          dicasSolicitadas,
+          timestamp: new Date().toISOString()
+        });
+
+        setOverlayConfig({
+          visible: true,
+          variant: 'success',
+          titulo: 'Prescrição Farmacológica Aprovada!',
+          mensagem: `Conduta imediata executada com perfeição para ${paciente.nome}.\n\n${avaliacao.mensagemGenio}`,
+          explicacaoMedica: paciente.protocolo.explicacao,
+          xpGanhos: 250,
+          onConfirm: () => {
+            setOverlayConfig(prev => ({ ...prev, visible: false }));
+            router.back();
+          }
         });
       } catch (e) {
         console.error(e);
       }
     } else {
-      showAlert('Atenção', 'Conduta perigosa! Revise as medicações do protocolo inicial de Síndrome Coronariana Aguda.');
+      setErros(erros + 1);
+      setOverlayConfig({
+        visible: true,
+        variant: 'warning',
+        titulo: 'Risco de Complicação Medicamentosa!',
+        mensagem: 'A conduta prescrita possui contraindicação importante ou não traz benefício ao paciente neste estado.',
+        explicacaoMedica: paciente.protocolo.explicacao,
+        onConfirm: () => setOverlayConfig(prev => ({ ...prev, visible: false }))
+      });
     }
   };
+
+  const dicaGenioAtual = getGenieHint(patientId, 3, 0);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -85,61 +114,90 @@ export default function ProtocoloScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
           <ArrowLeft color="#FFFFFF" size={24} />
         </TouchableOpacity>
-        <Text style={styles.appBarTitle}>Módulo 4: Medicação</Text>
+        <Text style={styles.appBarTitle}>Módulo 4: Farmacologia ({paciente.nome})</Text>
         <View style={{ width: 40 }} />
       </View>
 
-      <View style={styles.container}>
-        <View style={styles.headerRow}>
-          <Pill color="#A855F7" size={30} />
-          <Text style={styles.headerText}>Prescrição de Emergência</Text>
+      <PatientMonitorHeader
+        nomePaciente={paciente.nome}
+        sinaisVitais={paciente.anamnese.sinaisVitais}
+        estadoAlarme={paciente.complexidade >= 4 ? 'critico' : 'atencao'}
+      />
+
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.protocoloCard}>
+          <View style={styles.protocoloHeaderRow}>
+            <Pill color="#C084FC" size={22} />
+            <Text style={styles.protocoloTitle}>{paciente.protocolo.titulo}</Text>
+          </View>
+          <Text style={styles.protocoloCenario}>
+            <Text style={{ fontWeight: 'bold', color: '#F8FAFC' }}>Cenário Clínico: </Text>
+            {paciente.protocolo.cenario}
+          </Text>
+
+          {paciente.protocolo.contraindicacoesEspecificas ? (
+            <View style={styles.alertBox}>
+              <AlertTriangle color="#F59E0B" size={16} />
+              <Text style={styles.alertBoxText}>
+                ATENÇÃO ÀS CONTRAINDICAÇÕES ESPECÍFICAS DESTE PACIENTE!
+              </Text>
+            </View>
+          ) : null}
         </View>
 
-        <Text style={styles.instructionText}>
-          Selecione EXATAMENTE as 4 intervenções do protocolo inicial para o infarto (MONA):
-        </Text>
+        <View style={styles.questionCard}>
+          <Text style={styles.questionTitle}>Decisão Terapêutica</Text>
+          <Text style={styles.questionText}>{paciente.protocolo.pergunta}</Text>
+        </View>
 
-        <View style={styles.gridContainer}>
-          {MEDICAMENTOS.map((remedio, index) => {
-            const isSelecionado = selecionados.includes(remedio);
+        <View style={styles.optionsContainer}>
+          {paciente.protocolo.opcoes.map((opcao, index) => {
+            const isSelected = opcaoSelecionada === index;
             return (
               <TouchableOpacity
                 key={index}
-                activeOpacity={0.8}
-                onPress={() => alternarMedicamento(remedio)}
+                activeOpacity={0.85}
+                onPress={() => setOpcaoSelecionada(index)}
                 style={[
-                  styles.medButton,
-                  {
-                    backgroundColor: isSelecionado ? '#F3E8FF' : '#FFFFFF',
-                    borderColor: isSelecionado ? '#A855F7' : '#D1D5DB',
-                    borderWidth: isSelecionado ? 2 : 1,
-                    elevation: isSelecionado ? 0 : 2,
-                  }
+                  styles.optionButton,
+                  isSelected && styles.optionButtonSelected
                 ]}
               >
                 <Text style={[
-                  styles.medButtonText,
-                  {
-                    color: isSelecionado ? '#581C87' : '#1F2937',
-                    fontWeight: isSelecionado ? 'bold' : 'normal',
-                  }
+                  styles.optionText,
+                  isSelected && styles.optionTextSelected
                 ]}>
-                  {remedio}
+                  {opcao}
                 </Text>
               </TouchableOpacity>
             );
           })}
         </View>
 
-        <TouchableOpacity 
-          style={[styles.confirmButton, selecionados.length !== 4 && styles.confirmButtonDisabled]}
-          activeOpacity={0.8}
-          onPress={confirmarProtocolo}
-          disabled={selecionados.length !== 4}
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={verificarResposta}
+          style={styles.confirmButton}
         >
-          <Text style={styles.confirmButtonText}>Confirmar Protocolo</Text>
+          <Text style={styles.confirmButtonText}>Prescrever e Enviar ao Plantão</Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
+
+      {/* Companion Gênio Enfermeiro */}
+      <NurseGenieAvatar
+        dicaTexto={dicaGenioAtual}
+        onDicaSolicitada={() => setDicasSolicitadas(dicasSolicitadas + 1)}
+      />
+
+      <ClinicalFeedbackOverlay
+        visible={overlayConfig.visible}
+        variant={overlayConfig.variant}
+        titulo={overlayConfig.titulo}
+        mensagem={overlayConfig.mensagem}
+        explicacaoMedica={overlayConfig.explicacaoMedica}
+        xpGanhos={overlayConfig.xpGanhos}
+        onConfirm={overlayConfig.onConfirm}
+      />
     </SafeAreaView>
   );
 }
@@ -147,77 +205,129 @@ export default function ProtocoloScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#0F172A',
   },
   appBar: {
     height: 56,
-    backgroundColor: '#1E3A8A',
+    backgroundColor: '#1E293B',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#334155',
     paddingTop: Platform.OS === 'android' ? 24 : 0,
   },
   iconButton: {
-    padding: 16,
+    padding: 12,
   },
   appBarTitle: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
+    color: '#F8FAFC',
+    fontSize: 14,
+    fontWeight: '900',
   },
   container: {
-    flex: 1,
-    padding: 24,
+    padding: 20,
+    paddingBottom: 90,
   },
-  headerRow: {
+  protocoloCard: {
+    backgroundColor: '#1E293B',
+    padding: 18,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#A855F7',
+    marginBottom: 20,
+  },
+  protocoloHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 8,
+  },
+  protocoloTitle: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#C084FC',
+    marginLeft: 8,
+  },
+  protocoloCenario: {
+    fontSize: 13,
+    color: '#E9D5FF',
+    lineHeight: 19,
+  },
+  alertBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#451A03',
+    padding: 8,
+    borderRadius: 8,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#78350F',
+  },
+  alertBoxText: {
+    fontSize: 11,
+    color: '#FDE047',
+    marginLeft: 6,
+    fontWeight: '800',
+  },
+  questionCard: {
+    backgroundColor: '#1E293B',
+    padding: 18,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#334155',
     marginBottom: 16,
   },
-  headerText: {
-    fontSize: 20,
+  questionTitle: {
+    fontSize: 15,
     fontWeight: 'bold',
-    color: '#1E3A8A',
-    marginLeft: 10,
-  },
-  instructionText: {
-    fontSize: 16,
-    color: '#1F2937',
-    marginBottom: 24,
-  },
-  gridContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  medButton: {
-    width: '48%', // Approx 2 per row with spacing
-    height: 60,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  medButtonText: {
-    fontSize: 14,
+    color: '#C084FC',
+    marginBottom: 8,
     textAlign: 'center',
-    paddingHorizontal: 4,
+  },
+  questionText: {
+    fontSize: 14,
+    color: '#F8FAFC',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  optionsContainer: {
+    marginBottom: 20,
+  },
+  optionButton: {
+    minHeight: 54,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: '#1E293B',
+    borderWidth: 1,
+    borderColor: '#334155',
+    marginBottom: 10,
+    justifyContent: 'center',
+  },
+  optionButtonSelected: {
+    backgroundColor: '#581C87',
+    borderColor: '#A855F7',
+    borderWidth: 2,
+  },
+  optionText: {
+    fontSize: 14,
+    color: '#F8FAFC',
+  },
+  optionTextSelected: {
+    color: '#E9D5FF',
+    fontWeight: 'bold',
   },
   confirmButton: {
-    height: 56,
+    height: 52,
     backgroundColor: '#A855F7',
-    borderRadius: 12,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 16,
-  },
-  confirmButtonDisabled: {
-    backgroundColor: '#D1D5DB', // gray-300
   },
   confirmButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
     color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
