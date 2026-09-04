@@ -13,11 +13,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   ArrowLeft,
   User,
-  Star,
   Activity,
   ChevronRight,
   ShieldAlert,
-  Hospital
+  Hospital,
+  Play
 } from 'lucide-react-native';
 import { getAllPatients } from '../data/patientsData';
 import { PatientCase } from '../types/patient';
@@ -26,6 +26,7 @@ import MedicalClipboardCard from '../components/ui/MedicalClipboardCard';
 export default function GaleriaProntuariosScreen() {
   const [pacientes, setPacientes] = useState<PatientCase[]>([]);
   const [progressoPacientes, setProgressoPacientes] = useState<{ [key: string]: number }>({});
+  const [filtroStatus, setFiltroStatus] = useState<'todos' | 'andamento' | 'concluidos'>('todos');
 
   const carregarProgressoGeral = async () => {
     const todos = getAllPatients();
@@ -77,6 +78,13 @@ export default function GaleriaProntuariosScreen() {
     }, [])
   );
 
+  const pacientesFiltrados = pacientes.filter(p => {
+    const prog = progressoPacientes[p.id] || 0;
+    if (filtroStatus === 'concluidos') return prog === 100;
+    if (filtroStatus === 'andamento') return prog > 0 && prog < 100;
+    return true;
+  });
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.appBar}>
@@ -88,17 +96,69 @@ export default function GaleriaProntuariosScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.container}>
+        {/* Banner de Boas-Vindas à Sala Vermelha */}
         <View style={styles.introCard}>
           <View style={styles.introHeaderRow}>
-            <Hospital color="#38BDF8" size={22} />
+            <Hospital color="#10B981" size={22} />
             <Text style={styles.introTitle}>CTI / Sala de Emergência Coronariana</Text>
           </View>
           <Text style={styles.introDesc}>
-            Selecione um dos leitos abaixo para assumir o atendimento de emergência do paciente e executar os 6 módulos clínicos.
+            Selecione um dos leitos abaixo para assumir o atendimento do paciente e conduzir as 6 etapas clínicas.
           </Text>
         </View>
 
-        {pacientes.map((paciente, idx) => {
+        {/* Abas de Filtros 3D Gamificadas */}
+        <View style={styles.filterTabsContainer}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setFiltroStatus('todos')}
+            style={[
+              styles.filterTab3D,
+              filtroStatus === 'todos' && styles.filterTabActive3D
+            ]}
+          >
+            <Text style={[
+              styles.filterTabText,
+              filtroStatus === 'todos' && styles.filterTabTextActive
+            ]}>
+              TODOS LEITOS
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setFiltroStatus('andamento')}
+            style={[
+              styles.filterTab3D,
+              filtroStatus === 'andamento' && styles.filterTabActive3D
+            ]}
+          >
+            <Text style={[
+              styles.filterTabText,
+              filtroStatus === 'andamento' && styles.filterTabTextActive
+            ]}>
+              EM ANDAMENTO
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setFiltroStatus('concluidos')}
+            style={[
+              styles.filterTab3D,
+              filtroStatus === 'concluidos' && styles.filterTabActive3D
+            ]}
+          >
+            <Text style={[
+              styles.filterTabText,
+              filtroStatus === 'concluidos' && styles.filterTabTextActive
+            ]}>
+              CONCLUÍDOS
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {pacientesFiltrados.map((paciente, idx) => {
           const progresso = progressoPacientes[paciente.id] || 0;
           const leitoNum = `0${idx + 1}`;
 
@@ -110,13 +170,11 @@ export default function GaleriaProntuariosScreen() {
             >
               <MedicalClipboardCard
                 titulo={`LEITO ${leitoNum} — FICHA DE ADMISSÃO`}
-                classificacao={paciente.triagem.classificacaoEsperada}
-                corTag={paciente.corDestaque}
                 complexidade={paciente.complexidade}
               >
                 <View style={styles.patientHeader}>
                   <View style={styles.avatarCircle}>
-                    <User color="#1E3A8A" size={24} />
+                    <User color="#6D28D9" size={24} />
                   </View>
                   <View style={styles.patientInfo}>
                     <Text style={styles.patientName}>{paciente.nome}</Text>
@@ -124,7 +182,7 @@ export default function GaleriaProntuariosScreen() {
                       {paciente.idade} anos • {paciente.genero} • {paciente.ocupacao}
                     </Text>
                   </View>
-                  <ChevronRight color="#94A3B8" size={24} />
+                  <ChevronRight color="#7C3AED" size={24} />
                 </View>
 
                 <View style={styles.divider} />
@@ -140,8 +198,18 @@ export default function GaleriaProntuariosScreen() {
                   </View>
 
                   <View style={styles.progressContainer}>
-                    <Activity color="#2563EB" size={14} />
+                    <Activity color="#7C3AED" size={14} />
                     <Text style={styles.progressText}>{progresso}% Atendido</Text>
+                  </View>
+                </View>
+
+                {/* Botão 3D de Ação do Leito */}
+                <View style={styles.actionBtnContainer}>
+                  <View style={styles.atenderBtn3D}>
+                    <Play size={14} color="#FFFFFF" fill="#FFFFFF" style={{ marginRight: 6 }} />
+                    <Text style={styles.atenderBtnText}>
+                      {progresso === 100 ? 'REVISAR CASO CLÍNICO' : progresso > 0 ? 'CONTINUAR ATENDIMENTO' : 'ATENDER LEITO'}
+                    </Text>
                   </View>
                 </View>
               </MedicalClipboardCard>
@@ -156,17 +224,17 @@ export default function GaleriaProntuariosScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#2E1065',
   },
   appBar: {
     height: 56,
-    backgroundColor: '#1E293B',
+    backgroundColor: '#3B0764',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#334155',
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#581C87',
     paddingTop: Platform.OS === 'android' ? 24 : 0,
   },
   iconButton: {
@@ -182,12 +250,12 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   introCard: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#3B0764',
     padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#334155',
-    marginBottom: 24,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#6D28D9',
+    marginBottom: 16,
   },
   introHeaderRow: {
     flexDirection: 'row',
@@ -202,8 +270,38 @@ const styles = StyleSheet.create({
   },
   introDesc: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: '#DDD6FE',
     lineHeight: 18,
+  },
+  filterTabsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  filterTab3D: {
+    flex: 0.31,
+    backgroundColor: '#3B0764',
+    paddingVertical: 10,
+    borderRadius: 14,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#581C87',
+    borderBottomWidth: 3,
+    borderBottomColor: '#1E1B4B',
+  },
+  filterTabActive3D: {
+    backgroundColor: '#10B981',
+    borderColor: '#34D399',
+    borderBottomColor: '#047857',
+  },
+  filterTabText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#C4B5FD',
+    letterSpacing: 0.5,
+  },
+  filterTabTextActive: {
+    color: '#FFFFFF',
   },
   patientHeader: {
     flexDirection: 'row',
@@ -213,7 +311,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#E0F2FE',
+    backgroundColor: '#EDE9FE',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -233,7 +331,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: '#EDE9FE',
     marginVertical: 10,
   },
   queixaText: {
@@ -246,6 +344,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: 12,
   },
   badgeDiag: {
     flexDirection: 'row',
@@ -270,7 +369,26 @@ const styles = StyleSheet.create({
   progressText: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#2563EB',
+    color: '#7C3AED',
     marginLeft: 4,
+  },
+  actionBtnContainer: {
+    marginTop: 4,
+  },
+  atenderBtn3D: {
+    backgroundColor: '#10B981',
+    height: 42,
+    borderRadius: 12,
+    borderBottomWidth: 3.5,
+    borderBottomColor: '#047857',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  atenderBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
 });

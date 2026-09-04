@@ -12,10 +12,12 @@ import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ArrowLeft, HeartPulse, ShieldAlert } from 'lucide-react-native';
 import { getPatientById } from '../data/patientsData';
-import { getGenieHint, saveSessionPerformance } from '../utils/adaptiveEngine';
+import { getGenieHint, saveSessionPerformance, recordQuestionError } from '../utils/adaptiveEngine';
+import { checkAndUnlockNewAchievements, MedalhaData } from '../services/achievementService';
 import PatientMonitorHeader from '../components/ui/PatientMonitorHeader';
 import ClinicalFeedbackOverlay from '../components/ui/ClinicalFeedbackOverlay';
 import NurseGenieAvatar from '../components/ui/NurseGenieAvatar';
+import AchievementUnlockModal from '../components/ui/AchievementUnlockModal';
 
 export default function ECGScreen() {
   const params = useLocalSearchParams<{ patientId?: string }>();
@@ -26,6 +28,9 @@ export default function ECGScreen() {
   const [erros, setErros] = useState(0);
   const [dicasSolicitadas, setDicasSolicitadas] = useState(0);
   const [tempoInicio] = useState<number>(Date.now());
+
+  const [novasConquistas, setNovasConquistas] = useState<MedalhaData[]>([]);
+  const [showAchievementModal, setShowAchievementModal] = useState(false);
 
   const [overlayConfig, setOverlayConfig] = useState<{
     visible: boolean;
@@ -78,6 +83,12 @@ export default function ECGScreen() {
           timestamp: new Date().toISOString()
         });
 
+        // Checar conquistas desbloqueadas
+        const conquistas = await checkAndUnlockNewAchievements();
+        if (conquistas.length > 0) {
+          setNovasConquistas(conquistas);
+        }
+
         setOverlayConfig({
           visible: true,
           variant: 'success',
@@ -87,7 +98,11 @@ export default function ECGScreen() {
           xpGanhos: 200,
           onConfirm: () => {
             setOverlayConfig(prev => ({ ...prev, visible: false }));
-            router.back();
+            if (conquistas.length > 0) {
+              setShowAchievementModal(true);
+            } else {
+              router.back();
+            }
           }
         });
       } catch (e) {
@@ -95,6 +110,22 @@ export default function ECGScreen() {
       }
     } else {
       setErros(erros + 1);
+
+      // Registrar erro de alternativa
+      await recordQuestionError({
+        patientId,
+        patientName: paciente.nome,
+        moduloId: 'ecg',
+        moduloNome: 'Módulo 3: Eletrocardiograma (ECG)',
+        perguntaIndex: 0,
+        perguntaTitulo: 'Laudo Eletrocardiográfico',
+        perguntaTexto: paciente.ecg.pergunta,
+        alternativaEscolhidaTexto: paciente.ecg.opcoes[opcaoSelecionada],
+        alternativaEscolhidaIndex: opcaoSelecionada,
+        alternativaCorretaTexto: paciente.ecg.opcoes[paciente.ecg.correta],
+        explicacaoMedica: paciente.ecg.explicacao,
+      });
+
       setOverlayConfig({
         visible: true,
         variant: 'warning',
@@ -176,7 +207,7 @@ export default function ECGScreen() {
           onPress={verificarResposta}
           style={styles.confirmButton}
         >
-          <Text style={styles.confirmButtonText}>Assinar Laudo do ECG</Text>
+          <Text style={styles.confirmButtonText}>ASSINAR LAUDO DO ECG</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -195,6 +226,16 @@ export default function ECGScreen() {
         xpGanhos={overlayConfig.xpGanhos}
         onConfirm={overlayConfig.onConfirm}
       />
+
+      {/* Modal de Conquista Desbloqueada */}
+      <AchievementUnlockModal
+        visible={showAchievementModal}
+        conquistas={novasConquistas}
+        onClose={() => {
+          setShowAchievementModal(false);
+          router.back();
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -202,128 +243,161 @@ export default function ECGScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#2E1065',
   },
   appBar: {
     height: 56,
-    backgroundColor: '#1E293B',
+    backgroundColor: '#3B0764',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#334155',
+    borderBottomColor: '#581C87',
     paddingTop: Platform.OS === 'android' ? 24 : 0,
   },
   iconButton: {
     padding: 12,
   },
   appBarTitle: {
-    color: '#F8FAFC',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '900',
+    letterSpacing: 0.5,
   },
   container: {
-    padding: 20,
+    padding: 16,
     paddingBottom: 90,
   },
   ecgCard: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#3B0764',
     padding: 18,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#059669',
-    marginBottom: 20,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#10B981',
+    borderBottomWidth: 4,
+    borderBottomColor: '#047857',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 4,
   },
   ecgHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   ecgTitle: {
     fontSize: 15,
-    fontWeight: 'bold',
+    fontWeight: '900',
     color: '#34D399',
     marginLeft: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   ecgDesc: {
     fontSize: 13,
-    color: '#A7F3D0',
-    lineHeight: 19,
+    color: '#F3E8FF',
+    lineHeight: 20,
+    fontWeight: '500',
   },
   infoBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0F172A',
-    padding: 8,
-    borderRadius: 8,
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: '#334155',
+    backgroundColor: '#1E1B4B',
+    padding: 10,
+    borderRadius: 12,
+    marginTop: 12,
+    borderWidth: 1.5,
+    borderColor: '#38BDF8',
   },
   infoBadgeText: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: '#E0E7FF',
     marginLeft: 6,
+    fontWeight: '600',
   },
   questionCard: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#3B0764',
     padding: 18,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#334155',
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#6D28D9',
+    borderBottomWidth: 4,
+    borderBottomColor: '#4C1D95',
     marginBottom: 16,
   },
   questionTitle: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#34D399',
+    fontSize: 14,
+    fontWeight: '900',
+    color: '#A78BFA',
     marginBottom: 8,
     textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   questionText: {
-    fontSize: 14,
-    color: '#F8FAFC',
+    fontSize: 15,
+    color: '#FFFFFF',
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 22,
+    fontWeight: 'bold',
   },
   optionsContainer: {
     marginBottom: 20,
+    gap: 10,
   },
   optionButton: {
-    minHeight: 54,
+    minHeight: 56,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: '#1E293B',
-    borderWidth: 1,
-    borderColor: '#334155',
-    marginBottom: 10,
+    borderRadius: 16,
+    backgroundColor: '#3B0764',
+    borderWidth: 2,
+    borderColor: '#581C87',
+    borderBottomWidth: 4,
+    borderBottomColor: '#1E1B4B',
     justifyContent: 'center',
   },
   optionButtonSelected: {
     backgroundColor: '#064E3B',
     borderColor: '#10B981',
+    borderBottomColor: '#047857',
     borderWidth: 2,
+    borderBottomWidth: 4,
   },
   optionText: {
     fontSize: 14,
-    color: '#F8FAFC',
+    color: '#E9D5FF',
+    fontWeight: '700',
+    lineHeight: 20,
   },
   optionTextSelected: {
-    color: '#A7F3D0',
-    fontWeight: 'bold',
+    color: '#6EE7B7',
+    fontWeight: '900',
   },
   confirmButton: {
-    height: 52,
+    height: 56,
     backgroundColor: '#10B981',
-    borderRadius: 14,
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: '#34D399',
+    borderBottomWidth: 5,
+    borderBottomColor: '#047857',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 5,
   },
   confirmButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
 });

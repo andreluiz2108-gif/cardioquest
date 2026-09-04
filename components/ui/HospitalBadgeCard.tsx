@@ -17,7 +17,7 @@ export default function HospitalBadgeCard({
   avatarEmoji,
   xpTotal,
   hospital = 'HOSPITAL DAS CLÍNICAS — UNICAMP',
-  corCargo = '#3B82F6'
+  corCargo = '#10B981'
 }: HospitalBadgeCardProps) {
   return (
     <View style={styles.badgeContainer}>
@@ -34,7 +34,7 @@ export default function HospitalBadgeCard({
 
         {/* Corpo do Crachá */}
         <View style={styles.badgeBody}>
-          {/* Foto/Avatar com Moldura */}
+          {/* Foto/Avatar com Moldura Gamificada */}
           <View style={styles.photoContainer}>
             <Text style={styles.avatarEmoji}>{avatarEmoji}</Text>
           </View>
@@ -45,17 +45,19 @@ export default function HospitalBadgeCard({
               {nome || 'Dr(a). Plantonista'}
             </Text>
 
-            <View style={[styles.roleBadge, { backgroundColor: `${corCargo}20`, borderColor: corCargo }]}>
-              <ShieldCheck size={12} color={corCargo} />
+            <View style={[styles.roleBadge, { backgroundColor: '#3B0764', borderColor: corCargo }]}>
+              <ShieldCheck size={13} color={corCargo} />
               <Text style={[styles.roleBadgeText, { color: corCargo }]}>{cargo}</Text>
             </View>
 
-            <Text style={styles.xpText}>⭐ {xpTotal} XP Acumulados</Text>
+            <View style={styles.xpRow}>
+              <Text style={styles.xpText}>⭐ {xpTotal} XP Acumulados</Text>
+            </View>
           </View>
 
           {/* QR Code / Chip Hospitalar */}
           <View style={styles.qrBox}>
-            <QrCode size={32} color="#475569" />
+            <QrCode size={30} color="#7C3AED" />
           </View>
         </View>
       </View>
@@ -66,41 +68,43 @@ export default function HospitalBadgeCard({
 const styles = StyleSheet.create({
   badgeContainer: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   lanyardLoop: {
     width: 60,
     height: 12,
-    backgroundColor: '#1E3A8A',
+    backgroundColor: '#7C3AED',
     borderTopLeftRadius: 6,
     borderTopRightRadius: 6,
     marginBottom: -2,
     zIndex: 1,
   },
   badgeCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#3B0764',
     width: '100%',
-    borderRadius: 16,
+    borderRadius: 20,
     borderWidth: 2,
-    borderColor: '#CBD5E1',
+    borderColor: '#6D28D9',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
     overflow: 'hidden',
   },
   badgeHeader: {
-    backgroundColor: '#1E3A8A',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    backgroundColor: '#581C87',
+    paddingVertical: 9,
+    paddingHorizontal: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#6D28D9',
   },
   hospitalText: {
-    color: '#FFFFFF',
-    fontSize: 10,
+    color: '#F5F3FF',
+    fontSize: 11,
     fontWeight: '900',
     letterSpacing: 0.8,
     marginLeft: 6,
@@ -109,14 +113,15 @@ const styles = StyleSheet.create({
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#2E1065',
   },
   photoContainer: {
     width: 64,
     height: 64,
-    borderRadius: 12,
-    backgroundColor: '#F1F5F9',
-    borderWidth: 2,
-    borderColor: '#94A3B8',
+    borderRadius: 18,
+    backgroundColor: '#4C1D95',
+    borderWidth: 2.5,
+    borderColor: '#7C3AED',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -131,7 +136,7 @@ const styles = StyleSheet.create({
   nomeText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#0F172A',
+    color: '#F8FAFC',
   },
   roleBadge: {
     flexDirection: 'row',
@@ -140,25 +145,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
-    borderWidth: 1,
+    borderWidth: 1.5,
     marginTop: 4,
     marginBottom: 4,
   },
   roleBadgeText: {
     fontSize: 11,
-    fontWeight: 'bold',
+    fontWeight: '900',
     marginLeft: 4,
+  },
+  xpRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   xpText: {
     fontSize: 12,
-    color: '#64748B',
-    fontWeight: '600',
+    color: '#FBBF24',
+    fontWeight: '700',
   },
   qrBox: {
-    padding: 4,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    padding: 6,
+    backgroundColor: '#3B0764',
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#6D28D9',
   },
 });

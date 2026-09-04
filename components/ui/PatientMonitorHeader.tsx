@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Platform } from 'react-native';
-import { HeartPulse, Activity, AlertTriangle, ShieldCheck } from 'lucide-react-native';
+import { HeartPulse, Activity, ShieldCheck } from 'lucide-react-native';
 
 interface PatientMonitorHeaderProps {
   nomePaciente: string;
@@ -20,7 +20,6 @@ export default function PatientMonitorHeader({
   sinaisVitais = { pa: '120/80', fc: '75 bpm', spo2: '97%', tax: '36.5 °C' },
   estadoAlarme = 'estavel'
 }: PatientMonitorHeaderProps) {
-  // Animação da luz de pulso do monitor
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -46,11 +45,11 @@ export default function PatientMonitorHeader({
   const getCorAlarme = () => {
     switch (estadoAlarme) {
       case 'critico':
-        return '#EF4444'; // Red
+        return '#EF4444';
       case 'atencao':
-        return '#F59E0B'; // Amber
+        return '#F59E0B';
       default:
-        return '#10B981'; // Emerald
+        return '#10B981';
     }
   };
 
@@ -99,10 +98,10 @@ export default function PatientMonitorHeader({
         {/* Pressão Arterial */}
         <View style={styles.metricCard}>
           <View style={styles.metricHeader}>
-            <Activity color="#3B82F6" size={14} />
+            <Activity color="#38BDF8" size={14} />
             <Text style={styles.metricLabel}>PA (mmHg)</Text>
           </View>
-          <Text style={[styles.metricValue, { color: '#60A5FA' }]}>
+          <Text style={[styles.metricValue, { color: '#38BDF8' }]}>
             {sinaisVitais.pa || '120/80'}
           </Text>
         </View>
@@ -130,11 +129,11 @@ export default function PatientMonitorHeader({
 
 const styles = StyleSheet.create({
   monitorContainer: {
-    backgroundColor: '#0F172A', // Dark Navy de Monitor Médico
+    backgroundColor: '#1E1B4B', // Deep Indigo/Purple Hospital Monitor
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 3,
-    borderBottomColor: '#1E293B',
+    borderBottomColor: '#4C1D95',
   },
   topBar: {
     flexDirection: 'row',
@@ -143,19 +142,21 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   leitoBadge: {
-    backgroundColor: '#334155',
+    backgroundColor: '#4C1D95',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#6D28D9',
   },
   leitoBadgeText: {
-    color: '#F8FAFC',
+    color: '#DDD6FE',
     fontSize: 11,
     fontWeight: '900',
     letterSpacing: 0.5,
   },
   patientName: {
-    color: '#F1F5F9',
+    color: '#F8FAFC',
     fontSize: 15,
     fontWeight: 'bold',
     flex: 1,
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
-    borderWidth: 1,
+    borderWidth: 1.5,
   },
   pulseDot: {
     width: 7,
@@ -186,13 +187,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   metricCard: {
-    backgroundColor: '#1E293B',
-    paddingHorizontal: 12,
+    backgroundColor: '#2E1065',
+    paddingHorizontal: 10,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 10,
     flex: 0.31,
-    borderWidth: 1,
-    borderColor: '#334155',
+    borderWidth: 1.5,
+    borderColor: '#4C1D95',
   },
   metricHeader: {
     flexDirection: 'row',
@@ -200,13 +201,13 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   metricLabel: {
-    color: '#94A3B8',
-    fontSize: 10,
-    fontWeight: '700',
+    color: '#C4B5FD',
+    fontSize: 9,
+    fontWeight: '800',
     marginLeft: 4,
   },
   metricValue: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: 'bold',
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
@@ -216,7 +217,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: 4,
     borderTopWidth: 1,
-    borderTopColor: '#1E293B',
+    borderTopColor: '#312E81',
   },
   ecgWaveLine: {
     flex: 1,
@@ -226,7 +227,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   ecgLeadText: {
-    color: '#64748B',
+    color: '#A78BFA',
     fontSize: 9,
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },

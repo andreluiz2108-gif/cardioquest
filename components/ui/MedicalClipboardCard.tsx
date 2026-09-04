@@ -1,12 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
-import { Clipboard, ShieldAlert, Star } from 'lucide-react-native';
+import { Clipboard, Star } from 'lucide-react-native';
 
 interface MedicalClipboardCardProps {
   children: React.ReactNode;
   titulo?: string;
-  classificacao?: string;
-  corTag?: string;
   complexidade?: number;
   style?: ViewStyle;
 }
@@ -14,14 +12,12 @@ interface MedicalClipboardCardProps {
 export default function MedicalClipboardCard({
   children,
   titulo = 'PRONTUÁRIO MÉDICO DE LEITO',
-  classificacao,
-  corTag = '#EF4444',
   complexidade,
   style
 }: MedicalClipboardCardProps) {
   return (
     <View style={[styles.clipboardContainer, style]}>
-      {/* Clipe Metálico Superior */}
+      {/* Clipe Superior Gamificado */}
       <View style={styles.metallicClip}>
         <View style={styles.metallicHole} />
       </View>
@@ -31,24 +27,19 @@ export default function MedicalClipboardCard({
         {/* Header do Documento Médico */}
         <View style={styles.headerRow}>
           <View style={styles.headerTitleGroup}>
-            <Clipboard size={16} color="#1E3A8A" />
+            <Clipboard size={16} color="#6D28D9" />
             <Text style={styles.headerTitle}>{titulo}</Text>
           </View>
 
-          {classificacao ? (
-            <View style={[styles.urgencyTag, { backgroundColor: corTag }]}>
-              <Text style={styles.urgencyTagText}>{classificacao.toUpperCase()}</Text>
-            </View>
-          ) : null}
-
+          {/* Dificuldade indicada exclusivamente por estrelas douradas */}
           {complexidade ? (
             <View style={styles.starsGroup}>
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
-                  size={12}
-                  color={i < complexidade ? '#EAB308' : '#CBD5E1'}
-                  fill={i < complexidade ? '#EAB308' : 'transparent'}
+                  size={15}
+                  color={i < complexidade ? '#F59E0B' : '#E2E8F0'}
+                  fill={i < complexidade ? '#F59E0B' : 'transparent'}
                 />
               ))}
             </View>
@@ -66,17 +57,19 @@ export default function MedicalClipboardCard({
 
 const styles = StyleSheet.create({
   clipboardContainer: {
-    backgroundColor: '#334155', // Prancha escura de suporte
-    borderRadius: 20,
+    backgroundColor: '#3B0764', // Prancha em tom roxo profundo
+    borderRadius: 22,
     paddingTop: 18,
     paddingHorizontal: 10,
     paddingBottom: 10,
+    borderWidth: 2,
+    borderColor: '#581C87',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 4,
-    marginBottom: 24,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 14,
+    elevation: 6,
+    marginBottom: 20,
   },
   metallicClip: {
     position: 'absolute',
@@ -84,26 +77,26 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     width: 100,
     height: 24,
-    backgroundColor: '#94A3B8', // Efeito metálico cromado
-    borderRadius: 6,
+    backgroundColor: '#7C3AED',
+    borderRadius: 8,
     borderWidth: 2,
-    borderColor: '#64748B',
+    borderColor: '#A78BFA',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
   },
   metallicHole: {
-    width: 30,
+    width: 32,
     height: 6,
-    backgroundColor: '#475569',
+    backgroundColor: '#4C1D95',
     borderRadius: 3,
   },
   paperSheet: {
-    backgroundColor: '#FFFFFF', // Papel clínico claro
-    borderRadius: 14,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: '#EDE9FE',
   },
   headerRow: {
     flexDirection: 'row',
@@ -118,19 +111,8 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#1E3A8A',
+    color: '#4C1D95',
     marginLeft: 6,
-    letterSpacing: 0.5,
-  },
-  urgencyTag: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  urgencyTagText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '900',
     letterSpacing: 0.5,
   },
   starsGroup: {
@@ -138,7 +120,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: '#EDE9FE',
     marginVertical: 10,
   },
 });

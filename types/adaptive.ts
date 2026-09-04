@@ -33,3 +33,21 @@ export interface LearningRecommendation {
   patientIdRecomendado: string;
   moduloRecomendadoIndex?: number;
 }
+
+export interface QuestionErrorRecord {
+  id: string; // Identificador único: `${patientId}_${moduloId}_${perguntaIndex}_${alternativaEscolhidaIndex}`
+  patientId: string;
+  patientName: string;
+  moduloId: string;
+  moduloNome: string;
+  perguntaIndex: number;
+  perguntaTitulo: string;
+  perguntaTexto: string;
+  alternativaEscolhidaTexto: string;
+  alternativaEscolhidaIndex: number;
+  alternativaCorretaTexto: string;
+  explicacaoMedica?: string;
+  quantidadeErros: number; // Quantas vezes errou essa alternativa específica
+  ultimoErroTimestamp: string;
+}
+

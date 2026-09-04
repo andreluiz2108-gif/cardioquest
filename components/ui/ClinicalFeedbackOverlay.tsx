@@ -4,15 +4,12 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Platform
+  TouchableOpacity
 } from 'react-native';
 import {
   CheckCircle2,
   AlertTriangle,
   Trophy,
-  Activity,
   ArrowRight,
   ShieldCheck,
   RotateCcw
@@ -46,9 +43,15 @@ export default function ClinicalFeedbackOverlay({
   const isWarning = variant === 'warning';
 
   const getCorTema = () => {
-    if (isCompletion) return '#10B981'; // Emerald
-    if (isSuccess) return '#22C55E'; // Green
+    if (isCompletion) return '#10B981'; // Mint Green
+    if (isSuccess) return '#10B981'; // Mint Green
     return '#EF4444'; // Red
+  };
+
+  const getCorTemaDark = () => {
+    if (isCompletion) return '#047857';
+    if (isSuccess) return '#047857';
+    return '#991B1B';
   };
 
   const getCarimboTexto = () => {
@@ -58,6 +61,7 @@ export default function ClinicalFeedbackOverlay({
   };
 
   const corTema = getCorTema();
+  const corTemaDark = getCorTemaDark();
 
   return (
     <Modal
@@ -78,7 +82,7 @@ export default function ClinicalFeedbackOverlay({
 
             {xpGanhos ? (
               <View style={styles.xpBadge}>
-                <Trophy size={14} color="#EAB308" />
+                <Trophy size={14} color="#B45309" />
                 <Text style={styles.xpBadgeText}>+{xpGanhos} XP</Text>
               </View>
             ) : null}
@@ -87,11 +91,11 @@ export default function ClinicalFeedbackOverlay({
           {/* Ícone Central */}
           <View style={[styles.iconCircle, { backgroundColor: `${corTema}15` }]}>
             {isCompletion ? (
-              <Trophy size={42} color={corTema} />
+              <Trophy size={44} color={corTema} />
             ) : isSuccess ? (
-              <CheckCircle2 size={42} color={corTema} />
+              <CheckCircle2 size={44} color={corTema} />
             ) : (
-              <AlertTriangle size={42} color={corTema} />
+              <AlertTriangle size={44} color={corTema} />
             )}
           </View>
 
@@ -99,22 +103,25 @@ export default function ClinicalFeedbackOverlay({
           <Text style={styles.modalTitle}>{titulo}</Text>
           <Text style={styles.modalMessage}>{mensagem}</Text>
 
-          {/* Card de Debriefing / Fundamentação Médica */}
+          {/* Card de Fundamentação Médica */}
           {explicacaoMedica ? (
             <View style={styles.debriefingCard}>
               <View style={styles.debriefingHeader}>
-                <ShieldCheck size={16} color="#1E3A8A" />
+                <ShieldCheck size={16} color="#6D28D9" />
                 <Text style={styles.debriefingTitle}>Fundamentação Médica</Text>
               </View>
               <Text style={styles.debriefingText}>{explicacaoMedica}</Text>
             </View>
           ) : null}
 
-          {/* Botão de Ação Terapêutica */}
+          {/* Botão de Ação 3D Gamificado */}
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={onConfirm}
-            style={[styles.actionButton, { backgroundColor: corTema }]}
+            style={[
+              styles.actionButton3D, 
+              { backgroundColor: corTema, borderBottomColor: corTemaDark }
+            ]}
           >
             {isWarning ? (
               <RotateCcw size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
@@ -122,7 +129,7 @@ export default function ClinicalFeedbackOverlay({
               <ArrowRight size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
             )}
             <Text style={styles.actionButtonText}>
-              {textoBotao || (isWarning ? 'Revisar Conduta' : 'Continuar Atendimento')}
+              {textoBotao || (isWarning ? 'REVISAR CONDUTA' : 'CONTINUAR ATENDIMENTO')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -134,7 +141,7 @@ export default function ClinicalFeedbackOverlay({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.85)', // Dark navy semitransparente
+    backgroundColor: 'rgba(46, 16, 101, 0.85)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -148,7 +155,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.3,
     shadowRadius: 20,
     elevation: 10,
   },
@@ -173,23 +180,23 @@ const styles = StyleSheet.create({
   xpBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF9C3',
+    backgroundColor: '#FEF3C7',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#FDE047',
+    borderWidth: 1.5,
+    borderColor: '#F59E0B',
   },
   xpBadgeText: {
     fontSize: 13,
-    fontWeight: 'bold',
+    fontWeight: '900',
     color: '#854D0E',
     marginLeft: 4,
   },
   iconCircle: {
-    width: 74,
-    height: 74,
-    borderRadius: 37,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
@@ -210,11 +217,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   debriefingCard: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#F5F3FF',
     padding: 14,
     borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderWidth: 1.5,
+    borderColor: '#DDD6FE',
     marginBottom: 20,
   },
   debriefingHeader: {
@@ -225,29 +232,31 @@ const styles = StyleSheet.create({
   debriefingTitle: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#1E3A8A',
+    color: '#6D28D9',
     marginLeft: 6,
   },
   debriefingText: {
     fontSize: 13,
-    color: '#475569',
+    color: '#4C1D95',
     lineHeight: 18,
   },
-  actionButton: {
+  actionButton3D: {
     height: 52,
     borderRadius: 14,
+    borderBottomWidth: 4,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.2,
     shadowRadius: 8,
-    elevation: 3,
+    elevation: 4,
   },
   actionButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
 });

@@ -25,7 +25,6 @@ export default function NurseGenieAvatar({
   const [modalVisivel, setModalVisivel] = useState(false);
   const [dicaJaVista, setDicaJaVista] = useState(false);
 
-  // Animação de levitação/flutuação do Gênio
   const floatAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -97,8 +96,8 @@ export default function NurseGenieAvatar({
           <View style={styles.speechBubbleCard}>
             <View style={styles.bubbleHeader}>
               <View style={styles.titleGroup}>
-                <Lightbulb size={20} color="#EAB308" />
-                <Text style={styles.bubbleTitle}>Dica Mágica do Gênio Enfermeiro</Text>
+                <Lightbulb size={20} color="#F59E0B" />
+                <Text style={styles.bubbleTitle}>Dica Clínica do Gênio Enfermeiro</Text>
               </View>
               <TouchableOpacity onPress={() => setModalVisivel(false)} style={styles.closeButton}>
                 <X size={20} color="#94A3B8" />
@@ -117,18 +116,19 @@ export default function NurseGenieAvatar({
             </View>
 
             <View style={styles.warningNote}>
-              <HelpCircle size={14} color="#3B82F6" />
+              <HelpCircle size={14} color="#7C3AED" />
               <Text style={styles.warningNoteText}>
                 Pedir dicas mágicas ajuda na retenção, mas reduz ligeiramente a pontuação final de maestria do caso.
               </Text>
             </View>
 
+            {/* Botão 3D Gamificado */}
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={() => setModalVisivel(false)}
-              style={styles.entendiButton}
+              style={styles.entendiButton3D}
             >
-              <Text style={styles.entendiButtonText}>Entendi, Obrigado Gênio!</Text>
+              <Text style={styles.entendiButtonText}>ENTENDI, OBRIGADO GÊNIO!</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -151,14 +151,14 @@ const styles = StyleSheet.create({
   hintIndicatorBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#10B981',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 12,
     marginBottom: 2,
     borderWidth: 1.5,
-    borderColor: '#93C5FD',
-    shadowColor: '#2563EB',
+    borderColor: '#6EE7B7',
+    shadowColor: '#059669',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.4,
     shadowRadius: 4,
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+    backgroundColor: 'rgba(46, 16, 101, 0.85)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -185,15 +185,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     width: '100%',
     maxWidth: 420,
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 20,
-    borderWidth: 2,
-    borderColor: '#93C5FD',
+    borderWidth: 2.5,
+    borderColor: '#C4B5FD',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 18,
+    elevation: 10,
   },
   bubbleHeader: {
     flexDirection: 'row',
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: '#EDE9FE',
     paddingBottom: 10,
   },
   titleGroup: {
@@ -210,8 +210,8 @@ const styles = StyleSheet.create({
   },
   bubbleTitle: {
     fontSize: 15,
-    fontWeight: 'bold',
-    color: '#1E3A8A',
+    fontWeight: '900',
+    color: '#4C1D95',
     marginLeft: 6,
   },
   closeButton: {
@@ -229,44 +229,47 @@ const styles = StyleSheet.create({
   },
   bubbleContent: {
     flex: 1,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F5F3FF',
     padding: 12,
     borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#BFDBFE',
+    borderWidth: 1.5,
+    borderColor: '#DDD6FE',
   },
   dicaText: {
     fontSize: 13,
-    color: '#1E293B',
+    color: '#3B0764',
     lineHeight: 19,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   warningNote: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#F3E8FF',
     padding: 8,
-    borderRadius: 8,
+    borderRadius: 10,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E9D5FF',
   },
   warningNoteText: {
     fontSize: 11,
-    color: '#64748B',
+    color: '#6B21A8',
     marginLeft: 6,
     flex: 1,
   },
-  entendiButton: {
-    backgroundColor: '#2563EB',
-    height: 46,
-    borderRadius: 12,
+  entendiButton3D: {
+    backgroundColor: '#10B981',
+    height: 48,
+    borderRadius: 14,
+    borderBottomWidth: 4,
+    borderBottomColor: '#047857',
     justifyContent: 'center',
     alignItems: 'center',
   },
   entendiButtonText: {
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
 });

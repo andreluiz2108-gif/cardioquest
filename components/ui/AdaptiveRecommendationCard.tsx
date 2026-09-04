@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { router } from 'expo-router';
-import { Sparkles, ArrowRight, BookOpen, Flame, Compass } from 'lucide-react-native';
+import { Sparkles, ArrowRight } from 'lucide-react-native';
 import { getLatestRecommendation } from '../../utils/adaptiveEngine';
 import { LearningRecommendation } from '../../types/adaptive';
 
@@ -24,14 +24,14 @@ export default function AdaptiveRecommendationCard() {
   const getCorBanner = () => {
     if (isReforco) return '#F59E0B'; // Amber
     if (isDesafio) return '#EC4899'; // Pink / Master
-    return '#3B82F6'; // Blue
+    return '#10B981'; // Mint Green
   };
 
   const corBanner = getCorBanner();
   const genieSprite = require('../../assets/nurse_genie_pixel_art.png');
 
   return (
-    <View style={[styles.cardContainer, { borderColor: `${corBanner}50` }]}>
+    <View style={[styles.cardContainer, { borderColor: `${corBanner}80` }]}>
       <View style={styles.cardHeader}>
         <Image source={genieSprite} style={styles.genieIcon} resizeMode="contain" />
         <View style={styles.headerTextGroup}>
@@ -48,13 +48,14 @@ export default function AdaptiveRecommendationCard() {
       <Text style={styles.genieSpeechText}>{recomendacao.dicaGenio}</Text>
       <Text style={styles.cardDesc}>{recomendacao.descricao}</Text>
 
+      {/* Botão 3D Gamificado */}
       <TouchableOpacity
         activeOpacity={0.85}
         onPress={() => router.push(`/prontuario?patientId=${recomendacao.patientIdRecomendado}`)}
-        style={[styles.actionButton, { backgroundColor: corBanner }]}
+        style={[styles.actionButton3D, { backgroundColor: corBanner }]}
       >
         <Text style={styles.actionButtonText}>
-          {isReforco ? 'Iniciar Módulo de Reforço' : isDesafio ? 'Aceitar Desafio Master' : 'Ir para o Leito Recomendado'}
+          {isReforco ? 'INICIAR MÓDULO DE REFORÇO' : isDesafio ? 'ACEITAR DESAFIO MASTER' : 'IR PARA O LEITO RECOMENDADO'}
         </Text>
         <ArrowRight size={18} color="#FFFFFF" style={{ marginLeft: 6 }} />
       </TouchableOpacity>
@@ -64,16 +65,16 @@ export default function AdaptiveRecommendationCard() {
 
 const styles = StyleSheet.create({
   cardContainer: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#3B0764',
     padding: 16,
-    borderRadius: 18,
-    borderWidth: 1.5,
+    borderRadius: 20,
+    borderWidth: 2,
     marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 5,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -81,8 +82,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   genieIcon: {
-    width: 44,
-    height: 44,
+    width: 46,
+    height: 46,
     marginRight: 10,
   },
   headerTextGroup: {
@@ -107,30 +108,33 @@ const styles = StyleSheet.create({
   genieSpeechText: {
     fontSize: 12,
     fontStyle: 'italic',
-    color: '#93C5FD',
-    backgroundColor: '#0F172A',
-    padding: 10,
-    borderRadius: 10,
+    color: '#DDD6FE',
+    backgroundColor: '#2E1065',
+    padding: 12,
+    borderRadius: 12,
     marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#334155',
+    borderWidth: 1.5,
+    borderColor: '#581C87',
   },
   cardDesc: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: '#C4B5FD',
     marginBottom: 14,
     lineHeight: 17,
   },
-  actionButton: {
-    height: 44,
-    borderRadius: 12,
+  actionButton3D: {
+    height: 48,
+    borderRadius: 14,
+    borderBottomWidth: 4,
+    borderBottomColor: 'rgba(0, 0, 0, 0.35)',
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
   },
   actionButtonText: {
     color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: 'bold',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
 });

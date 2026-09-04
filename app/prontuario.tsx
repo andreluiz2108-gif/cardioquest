@@ -20,7 +20,7 @@ import {
   Lock, 
   PlayCircle,
   ArrowLeft,
-  Star
+  ChevronRight
 } from 'lucide-react-native';
 import { getPatientById } from '../data/patientsData';
 import PatientMonitorHeader from '../components/ui/PatientMonitorHeader';
@@ -74,53 +74,56 @@ export default function ProntuarioScreen() {
     }, [patientId])
   );
 
-  const hexToRgba = (hex: string, alpha: number) => {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  };
-
-  const ModuloDesafio = ({ titulo, descricao, Icone, cor, isLocked, rota }: any) => {
+  const ModuloDesafio = ({ numero, titulo, descricao, Icone, cor, isLocked, rota }: any) => {
     return (
       <TouchableOpacity
-        activeOpacity={0.8}
+        activeOpacity={isLocked ? 1 : 0.85}
         onPress={() => { if (!isLocked) router.push(rota); }}
         style={[
-          styles.moduloCard,
+          styles.moduloCard3D,
           {
-            backgroundColor: isLocked ? '#F1F5F9' : '#FFFFFF',
-            borderColor: isLocked ? '#CBD5E1' : hexToRgba(cor, 0.5),
-            shadowColor: isLocked ? 'transparent' : cor,
-            elevation: isLocked ? 0 : 2,
+            backgroundColor: isLocked ? '#1E1B4B' : '#3B0764',
+            borderColor: isLocked ? '#312E81' : '#6D28D9',
+            borderBottomColor: isLocked ? '#0F0E2A' : '#1E1B4B',
           }
         ]}
       >
         <View style={[
           styles.iconCircle,
-          { backgroundColor: isLocked ? '#E2E8F0' : hexToRgba(cor, 0.2) }
+          { 
+            backgroundColor: isLocked ? '#312E81' : `${cor}25`,
+            borderColor: isLocked ? '#4338CA' : cor
+          }
         ]}>
           {isLocked ? (
-            <Lock color="#64748B" size={24} />
+            <Lock color="#6366F1" size={22} />
           ) : (
             <Icone color={cor} size={24} />
           )}
         </View>
+
         <View style={styles.moduloTextContainer}>
           <Text style={[
             styles.moduloTitle,
-            { color: isLocked ? '#64748B' : '#0F172A' }
+            { color: isLocked ? '#6366F1' : '#F8FAFC' }
           ]}>
-            {titulo}
+            {numero}. {titulo}
           </Text>
           <Text style={[
             styles.moduloDesc,
-            { color: isLocked ? '#94A3B8' : '#334155' }
+            { color: isLocked ? '#4338CA' : '#C4B5FD' }
           ]}>
             {descricao}
           </Text>
         </View>
-        {!isLocked && <PlayCircle color={cor} size={28} />}
+
+        {!isLocked ? (
+          <View style={[styles.playBadge3D, { backgroundColor: cor }]}>
+            <PlayCircle color="#FFFFFF" size={22} />
+          </View>
+        ) : (
+          <Text style={styles.lockedTag}>BLOQUEADO</Text>
+        )}
       </TouchableOpacity>
     );
   };
@@ -147,8 +150,6 @@ export default function ProntuarioScreen() {
         {/* Prontuário Médico de Papel Físico */}
         <MedicalClipboardCard
           titulo="FICHA ADMISSIONAL DE EMERGÊNCIA"
-          classificacao={paciente.triagem.classificacaoEsperada}
-          corTag={paciente.corDestaque}
           complexidade={paciente.complexidade}
         >
           <Text style={styles.admissaoName}>
@@ -158,7 +159,7 @@ export default function ProntuarioScreen() {
             <Text style={{ fontWeight: 'bold' }}>Queixa Principal: </Text>
             {paciente.queixaPrincipal}
           </Text>
-          <Text style={[styles.admissaoDesc, { marginTop: 6, fontStyle: 'italic', color: '#64748B' }]}>
+          <Text style={[styles.admissaoDesc, { marginTop: 6, fontStyle: 'italic', color: '#6D28D9' }]}>
             {paciente.resumoClinico}
           </Text>
         </MedicalClipboardCard>
@@ -166,7 +167,8 @@ export default function ProntuarioScreen() {
         <Text style={styles.sectionTitle}>Evolução Clínica & Condutas</Text>
 
         <ModuloDesafio
-          titulo="1. Triagem (Manchester)"
+          numero="1"
+          titulo="Triagem (Manchester)"
           descricao="Classifique a prioridade de atendimento."
           Icone={Hospital}
           cor="#F97316"
@@ -175,25 +177,28 @@ export default function ProntuarioScreen() {
         />
 
         <ModuloDesafio
-          titulo="2. Anamnese Direcionada"
+          numero="2"
+          titulo="Anamnese Direcionada"
           descricao="Colete sinais vitais e histórico de risco."
           Icone={ClipboardType}
-          cor="#3B82F6"
+          cor="#38BDF8"
           isLocked={!mod2Liberado}
           rota={`/anamnese?patientId=${patientId}`}
         />
 
         <ModuloDesafio
-          titulo="3. Eletrocardiograma (ECG)"
+          numero="3"
+          titulo="Eletrocardiograma (ECG)"
           descricao="Interprete o laudo e alterações isquêmicas."
           Icone={HeartPulse}
-          cor="#22C55E"
+          cor="#10B981"
           isLocked={!mod3Liberado}
           rota={`/ecg?patientId=${patientId}`}
         />
 
         <ModuloDesafio
-          titulo="4. Intervenção Farmacológica"
+          numero="4"
+          titulo="Intervenção Farmacológica"
           descricao="Prescreva os fármacos e conduta de reperfusão."
           Icone={Pill}
           cor="#A855F7"
@@ -202,16 +207,18 @@ export default function ProntuarioScreen() {
         />
 
         <ModuloDesafio
-          titulo="5. Laboratório (Biomarcadores)"
+          numero="5"
+          titulo="Laboratório (Biomarcadores)"
           descricao="Avalie a curva enzimática de Troponina."
           Icone={FlaskConical}
-          cor="#4F46E5"
+          cor="#6366F1"
           isLocked={!mod5Liberado}
           rota={`/enzimas?patientId=${patientId}`}
         />
 
         <ModuloDesafio
-          titulo="6. Alta e Orientações"
+          numero="6"
+          titulo="Alta e Orientações"
           descricao="Prescreva prevenção secundária e orientações."
           Icone={HeartHandshake}
           cor="#14B8A6"
@@ -226,17 +233,17 @@ export default function ProntuarioScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#2E1065',
   },
   appBar: {
     height: 56,
-    backgroundColor: '#1E293B',
+    backgroundColor: '#3B0764',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#334155',
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#581C87',
     paddingTop: Platform.OS === 'android' ? 24 : 0,
   },
   iconButton: {
@@ -250,6 +257,7 @@ const styles = StyleSheet.create({
   },
   container: {
     padding: 20,
+    paddingBottom: 40,
   },
   admissaoName: {
     fontSize: 17,
@@ -269,24 +277,31 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     letterSpacing: 0.5,
   },
-  moduloCard: {
+  moduloCard3D: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    borderRadius: 16,
-    borderWidth: 2,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderBottomWidth: 4.5,
     marginBottom: 14,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
     shadowRadius: 8,
+    elevation: 4,
   },
   iconCircle: {
-    padding: 12,
-    borderRadius: 50,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   moduloTextContainer: {
     flex: 1,
-    marginLeft: 16,
+    marginLeft: 14,
     marginRight: 8,
   },
   moduloTitle: {
@@ -296,5 +311,19 @@ const styles = StyleSheet.create({
   },
   moduloDesc: {
     fontSize: 12,
+    lineHeight: 16,
+  },
+  playBadge3D: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  lockedTag: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#6366F1',
+    letterSpacing: 0.5,
   },
 });

@@ -2,7 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { 
   PlayerSessionMetrics, 
   AdaptiveEvaluationResult, 
-  LearningRecommendation 
+  LearningRecommendation,
+  QuestionErrorRecord
 } from '../types/adaptive';
 import { getAllPatients } from '../data/patientsData';
 
@@ -346,3 +347,91 @@ export async function getAggregatedClinicalStats(): Promise<AggregatedClinicalSt
     pacientesProgresso
   };
 }
+
+const QUESTION_ERRORS_KEY = 'historico_erros_alternativas';
+
+export interface RecordQuestionErrorParams {
+  patientId: string;
+  patientName: string;
+  moduloId: string;
+  moduloNome: string;
+  perguntaIndex: number;
+  perguntaTitulo: string;
+  perguntaTexto: string;
+  alternativaEscolhidaTexto: string;
+  alternativaEscolhidaIndex: number;
+  alternativaCorretaTexto: string;
+  explicacaoMedica?: string;
+}
+
+/**
+ * Registra um erro de alternativa escolhida pelo usuário, incrementando o contador caso já tenha errado anteriormente
+ */
+export async function recordQuestionError(params: RecordQuestionErrorParams): Promise<void> {
+  try {
+    const raw = await AsyncStorage.getItem(QUESTION_ERRORS_KEY);
+    const errors: QuestionErrorRecord[] = raw ? JSON.parse(raw) : [];
+
+    const recordId = `${params.patientId}_${params.moduloId}_${params.perguntaIndex}_${params.alternativaEscolhidaIndex}`;
+    const existingIndex = errors.findIndex(e => e.id === recordId);
+
+    const nowIso = new Date().toISOString();
+
+    if (existingIndex >= 0) {
+      errors[existingIndex].quantidadeErros += 1;
+      errors[existingIndex].ultimoErroTimestamp = nowIso;
+      // Atualiza textos caso tenham mudado
+      errors[existingIndex].alternativaEscolhidaTexto = params.alternativaEscolhidaTexto;
+      errors[existingIndex].alternativaCorretaTexto = params.alternativaCorretaTexto;
+      errors[existingIndex].explicacaoMedica = params.explicacaoMedica;
+    } else {
+      errors.push({
+        id: recordId,
+        patientId: params.patientId,
+        patientName: params.patientName,
+        moduloId: params.moduloId,
+        moduloNome: params.moduloNome,
+        perguntaIndex: params.perguntaIndex,
+        perguntaTitulo: params.perguntaTitulo,
+        perguntaTexto: params.perguntaTexto,
+        alternativaEscolhidaTexto: params.alternativaEscolhidaTexto,
+        alternativaEscolhidaIndex: params.alternativaEscolhidaIndex,
+        alternativaCorretaTexto: params.alternativaCorretaTexto,
+        explicacaoMedica: params.explicacaoMedica,
+        quantidadeErros: 1,
+        ultimoErroTimestamp: nowIso
+      });
+    }
+
+    await AsyncStorage.setItem(QUESTION_ERRORS_KEY, JSON.stringify(errors));
+  } catch (e) {
+    console.error('Erro ao registrar erro de alternativa:', e);
+  }
+}
+
+/**
+ * Retorna todos os erros por alternativa ordenados por recorrência
+ */
+export async function getDetailedQuestionErrors(): Promise<QuestionErrorRecord[]> {
+  try {
+    const raw = await AsyncStorage.getItem(QUESTION_ERRORS_KEY);
+    if (!raw) return [];
+    const errors: QuestionErrorRecord[] = JSON.parse(raw);
+    return errors.sort((a, b) => b.quantidadeErros - a.quantidadeErros);
+  } catch (e) {
+    console.error('Erro ao ler erros de alternativas:', e);
+    return [];
+  }
+}
+
+/**
+ * Limpa o histórico de erros por alternativa
+ */
+export async function clearQuestionErrorsHistory(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(QUESTION_ERRORS_KEY);
+  } catch (e) {
+    console.error('Erro ao limpar histórico de erros:', e);
+  }
+}
+

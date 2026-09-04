@@ -14,33 +14,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { 
   ArrowLeft, 
   Trophy, 
-  Hospital, 
-  ClipboardType, 
-  HeartPulse, 
-  Pill, 
-  FlaskConical, 
-  HeartHandshake, 
   Lock,
   Sparkles,
-  Zap,
-  ShieldCheck,
-  Award,
-  X,
-  CheckCircle2
+  X
 } from 'lucide-react-native';
-
-interface MedalhaData {
-  id: string;
-  categoria: 'credenciais' | 'autonomia' | 'vidas';
-  titulo: string;
-  subtitulo: string;
-  criterio: string;
-  xpBonus: number;
-  Icone: any;
-  corBase: string;
-  desbloqueada: boolean;
-  progressoTexto: string;
-}
+import { getAllAchievementsWithStatus, MedalhaData } from '../services/achievementService';
 
 export default function TrofeusScreen() {
   const [abaAtiva, setAbaAtiva] = useState<'credenciais' | 'autonomia' | 'vidas'>('credenciais');
@@ -49,182 +27,7 @@ export default function TrofeusScreen() {
 
   const carregarProgressoEMedalhas = async () => {
     try {
-      // Checar módulos concluídos
-      const m1 = await AsyncStorage.getItem('venceu_mod1');
-      const m2 = await AsyncStorage.getItem('venceu_mod2');
-      const m3 = await AsyncStorage.getItem('venceu_mod3');
-      const m4 = await AsyncStorage.getItem('venceu_mod4');
-      const m5 = await AsyncStorage.getItem('venceu_mod5');
-      const xpRaw = await AsyncStorage.getItem('xpEnfermeiro');
-      const xp = xpRaw ? parseInt(xpRaw, 10) : 0;
-
-      // Checar prontuários zerados
-      let pacientesZerados = 0;
-      const ids = ['carlos', 'maria', 'roberto', 'antonio', 'elena'];
-      for (const id of ids) {
-        const m6 = await AsyncStorage.getItem(`venceu_mod6_paciente_${id}`);
-        if (m6 === 'true') pacientesZerados++;
-      }
-
-      // Checar histórico adaptativo
-      const historyRaw = await AsyncStorage.getItem('desempenho_adaptativo_historico');
-      const history = historyRaw ? JSON.parse(historyRaw) : [];
-      const semDicas = history.some((h: any) => h.dicasSolicitadas === 0);
-      const tempoRapido = history.some((h: any) => h.tempoTotalSegundos > 0 && h.tempoTotalSegundos < 180);
-      const assertividadePerfeita = history.some((h: any) => h.acertos === h.totalPerguntas && h.totalPerguntas > 0);
-
-      const listaMedalhas: MedalhaData[] = [
-        // Aba 1: Credenciais Clínicas
-        {
-          id: 'triagem',
-          categoria: 'credenciais',
-          titulo: 'Guardião da Sala Vermelha',
-          subtitulo: 'Priorização de Risco',
-          criterio: 'Conclua a Triagem Manchester identificando a prioridade de atendimento imediato.',
-          xpBonus: 150,
-          Icone: Hospital,
-          corBase: '#F97316',
-          desbloqueada: m1 === 'true' || pacientesZerados > 0,
-          progressoTexto: m1 === 'true' || pacientesZerados > 0 ? 'Concluído' : '0/1 Concluído'
-        },
-        {
-          id: 'anamnese',
-          categoria: 'credenciais',
-          titulo: 'Detetive da Anamnese',
-          subtitulo: 'Sinais Vitais e Risco',
-          criterio: 'Mapeie os fatores de risco coronariano e equivalente isquêmico na admissão.',
-          xpBonus: 150,
-          Icone: ClipboardType,
-          corBase: '#3B82F6',
-          desbloqueada: m2 === 'true' || pacientesZerados > 0,
-          progressoTexto: m2 === 'true' || pacientesZerados > 0 ? 'Concluído' : '0/1 Concluído'
-        },
-        {
-          id: 'ecg',
-          categoria: 'credenciais',
-          titulo: 'Águia do Eletrocardiograma',
-          subtitulo: 'Laudo de Supra de ST',
-          criterio: 'Interprete o vetor isquêmico do ECG e identifique a parede coronariana atingida.',
-          xpBonus: 200,
-          Icone: HeartPulse,
-          corBase: '#22C55E',
-          desbloqueada: m3 === 'true' || pacientesZerados > 0,
-          progressoTexto: m3 === 'true' || pacientesZerados > 0 ? 'Concluído' : '0/1 Concluído'
-        },
-        {
-          id: 'protocolo',
-          categoria: 'credenciais',
-          titulo: 'Especialista em Reperfusão',
-          subtitulo: 'Prescrição MONABESH',
-          criterio: 'Administre o protocolo farmacológico correto e respeite as contraindicações específicas.',
-          xpBonus: 250,
-          Icone: Pill,
-          corBase: '#A855F7',
-          desbloqueada: m4 === 'true' || pacientesZerados > 0,
-          progressoTexto: m4 === 'true' || pacientesZerados > 0 ? 'Concluído' : '0/1 Concluído'
-        },
-        {
-          id: 'enzimas',
-          categoria: 'credenciais',
-          titulo: 'Cientista dos Biomarcadores',
-          subtitulo: 'Curva de Troponina',
-          criterio: 'Avalie a cinética enzimática de Troponina ultrassensível para laudo confirmatório.',
-          xpBonus: 200,
-          Icone: FlaskConical,
-          corBase: '#4F46E5',
-          desbloqueada: m5 === 'true' || pacientesZerados > 0,
-          progressoTexto: m5 === 'true' || pacientesZerados > 0 ? 'Concluído' : '0/1 Concluído'
-        },
-        {
-          id: 'alta',
-          categoria: 'credenciais',
-          titulo: 'Excelência em Prevenção',
-          subtitulo: 'Alta e Educação em Saúde',
-          criterio: 'Prescreva a terapia de prevenção secundária completa na alta do leito.',
-          xpBonus: 300,
-          Icone: HeartHandshake,
-          corBase: '#14B8A6',
-          desbloqueada: pacientesZerados > 0,
-          progressoTexto: pacientesZerados > 0 ? 'Concluído' : '0/1 Concluído'
-        },
-
-        // Aba 2: Autonomia & Agilidade
-        {
-          id: 'porta_ecg',
-          categoria: 'autonomia',
-          titulo: 'Porta-ECG Recorde (< 5 min)',
-          subtitulo: 'Agilidade de Emergência',
-          criterio: 'Conclua a triagem e interpretação inicial de emergência em ritmo ágil.',
-          xpBonus: 250,
-          Icone: Zap,
-          corBase: '#EAB308',
-          desbloqueada: tempoRapido || pacientesZerados >= 1,
-          progressoTexto: tempoRapido || pacientesZerados >= 1 ? 'Concluído' : 'Aguardando Atendimento Ágil'
-        },
-        {
-          id: 'autonomia',
-          categoria: 'autonomia',
-          titulo: 'Autonomia Absoluta',
-          subtitulo: '0 Dicas Solicitadas',
-          criterio: 'Conclua um atendimento de leito completo sem solicitar dicas do Gênio Enfermeiro.',
-          xpBonus: 300,
-          Icone: ShieldCheck,
-          corBase: '#38BDF8',
-          desbloqueada: semDicas || pacientesZerados >= 1,
-          progressoTexto: semDicas || pacientesZerados >= 1 ? 'Concluído' : 'Pendente'
-        },
-        {
-          id: 'assertividade',
-          categoria: 'autonomia',
-          titulo: 'Mestre da Assertividade',
-          subtitulo: '100% de Acertos',
-          criterio: 'Acerte todas as condutas clínicas do prontuário no primeiro intento.',
-          xpBonus: 350,
-          Icone: Award,
-          corBase: '#EC4899',
-          desbloqueada: assertividadePerfeita || pacientesZerados >= 1,
-          progressoTexto: assertividadePerfeita || pacientesZerados >= 1 ? 'Concluído' : 'Pendente'
-        },
-
-        // Aba 3: Vidas Salvas & Plantão
-        {
-          id: 'leitos_zerados',
-          categoria: 'vidas',
-          titulo: 'Leitos do CTI Zerados (5/5)',
-          subtitulo: 'Coleção de Prontuários',
-          criterio: 'Conclua com excelência os 5 prontuários de infarto da Sala Vermelha.',
-          xpBonus: 500,
-          Icone: Trophy,
-          corBase: '#F59E0B',
-          desbloqueada: pacientesZerados >= 5,
-          progressoTexto: `${pacientesZerados} / 5 Prontuários Zerados`
-        },
-        {
-          id: 'plantonista_inabalavel',
-          categoria: 'vidas',
-          titulo: 'Plantonista Inabalável',
-          subtitulo: 'Especialista em Cardio',
-          criterio: 'Acumule mais de 500 XP em condutas clínicas de urgência.',
-          xpBonus: 400,
-          Icone: Sparkles,
-          corBase: '#A855F7',
-          desbloqueada: xp >= 500,
-          progressoTexto: `${xp} / 500 XP Acumulados`
-        },
-        {
-          id: 'lenda_cardio',
-          categoria: 'vidas',
-          titulo: 'Lenda do Centro Cardiológico',
-          subtitulo: 'Mestre Supremo',
-          criterio: 'Acumule mais de 1000 XP e torne-se referência no atendimento coronariano.',
-          xpBonus: 600,
-          Icone: Trophy,
-          corBase: '#10B981',
-          desbloqueada: xp >= 1000,
-          progressoTexto: `${xp} / 1000 XP Acumulados`
-        }
-      ];
-
+      const listaMedalhas = await getAllAchievementsWithStatus();
       setMedalhas(listaMedalhas);
     } catch (e) {
       console.error(e);
@@ -400,7 +203,7 @@ export default function TrofeusScreen() {
                 onPress={() => setMedalhaSelecionada(null)}
                 style={[styles.closeModalButton, { backgroundColor: medalhaSelecionada.corBase }]}
               >
-                <Text style={styles.closeModalButtonText}>Fechar Detalhes</Text>
+                <Text style={styles.closeModalButtonText}>FECHAR DETALHES</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -413,87 +216,109 @@ export default function TrofeusScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#2E1065',
   },
   appBar: {
     height: 56,
-    backgroundColor: '#1E293B',
+    backgroundColor: '#3B0764',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#334155',
+    borderBottomColor: '#581C87',
     paddingTop: Platform.OS === 'android' ? 24 : 0,
   },
   iconButton: {
     padding: 12,
   },
   appBarTitle: {
-    color: '#F8FAFC',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '900',
     letterSpacing: 0.8,
   },
   container: {
-    padding: 20,
+    padding: 16,
+    paddingBottom: 40,
   },
   collectionBanner: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#3B0764',
     padding: 18,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: '#334155',
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#6D28D9',
+    borderBottomWidth: 4,
+    borderBottomColor: '#4C1D95',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 4,
   },
   collectionTextGroup: {
     flex: 1,
   },
   collectionTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#F8FAFC',
+    fontWeight: '900',
+    color: '#FFFFFF',
+    textTransform: 'uppercase',
   },
   collectionSubtitle: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: '#E9D5FF',
     marginTop: 4,
+    fontWeight: '600',
   },
   collectionBadge: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
+    width: 52,
+    height: 52,
+    borderRadius: 16,
     backgroundColor: '#FEF3C7',
+    borderWidth: 2,
+    borderColor: '#F59E0B',
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 12,
   },
   tabsContainer: {
     flexDirection: 'row',
-    backgroundColor: '#1E293B',
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 20,
+    backgroundColor: '#3B0764',
+    borderRadius: 16,
+    padding: 6,
+    marginBottom: 16,
+    borderWidth: 1.5,
+    borderColor: '#581C87',
+    gap: 6,
   },
   tabButton: {
     flex: 1,
     paddingVertical: 10,
     alignItems: 'center',
-    borderRadius: 8,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
   },
   tabButtonActive: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#7C3AED',
+    borderColor: '#A78BFA',
+    borderBottomWidth: 3,
+    borderBottomColor: '#4C1D95',
   },
   tabText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#C4B5FD',
+    textTransform: 'uppercase',
   },
   tabTextActive: {
     color: '#FFFFFF',
+    fontWeight: '900',
   },
   gridContainer: {
     flexDirection: 'row',
@@ -502,11 +327,12 @@ const styles = StyleSheet.create({
   },
   medalCard: {
     width: '48%',
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 16,
     alignItems: 'center',
-    marginBottom: 16,
-    borderWidth: 1.5,
+    marginBottom: 14,
+    borderWidth: 2,
+    borderBottomWidth: 4,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -516,27 +342,29 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    borderWidth: 1.5,
+    borderWidth: 2,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
   },
   medalTitle: {
     fontSize: 13,
-    fontWeight: 'bold',
+    fontWeight: '900',
     textAlign: 'center',
     marginBottom: 2,
+    textTransform: 'uppercase',
   },
   medalSub: {
     fontSize: 11,
-    color: '#94A3B8',
+    color: '#C4B5FD',
     textAlign: 'center',
     marginBottom: 10,
+    fontWeight: '500',
   },
   statusTag: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   statusTagText: {
     fontSize: 9,
@@ -551,12 +379,19 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#3B0764',
     width: '100%',
     maxWidth: 400,
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 20,
+    borderWidth: 2,
+    borderColor: '#6D28D9',
     borderTopWidth: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 8,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -567,13 +402,15 @@ const styles = StyleSheet.create({
   modalHeaderTitle: {
     fontSize: 11,
     fontWeight: '900',
-    color: '#64748B',
+    color: '#C4B5FD',
     letterSpacing: 0.8,
   },
   modalIconCircle: {
     width: 80,
     height: 80,
     borderRadius: 40,
+    borderWidth: 2,
+    borderColor: '#6D28D9',
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
@@ -581,61 +418,70 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#0F172A',
+    fontWeight: '900',
+    color: '#FFFFFF',
     textAlign: 'center',
+    textTransform: 'uppercase',
   },
   modalSub: {
     fontSize: 13,
-    color: '#64748B',
+    color: '#E9D5FF',
     textAlign: 'center',
     marginBottom: 16,
+    fontWeight: '600',
   },
   criterioCard: {
-    backgroundColor: '#F8FAFC',
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    backgroundColor: '#1E1B4B',
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#4C1D95',
     marginBottom: 14,
   },
   criterioLabel: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#1E3A8A',
+    color: '#A78BFA',
     marginBottom: 4,
+    letterSpacing: 0.5,
   },
   criterioText: {
     fontSize: 12,
-    color: '#334155',
+    color: '#F3E8FF',
     lineHeight: 18,
+    fontWeight: '500',
   },
   xpRewardBox: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FEF9C3',
+    backgroundColor: '#FEF3C7',
     padding: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#FDE047',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#F59E0B',
     marginBottom: 16,
   },
   xpRewardText: {
     fontSize: 13,
-    fontWeight: 'bold',
+    fontWeight: '900',
     color: '#854D0E',
     marginLeft: 6,
   },
   closeModalButton: {
-    height: 48,
-    borderRadius: 12,
+    height: 52,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.3)',
+    borderBottomWidth: 4,
+    borderBottomColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   closeModalButtonText: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
 });

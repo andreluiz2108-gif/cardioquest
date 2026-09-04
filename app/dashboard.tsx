@@ -27,8 +27,8 @@ import AdaptiveRecommendationCard from '../components/ui/AdaptiveRecommendationC
 
 const NIVEIS = [
   { nome: 'Estudante Calouro', minXp: 0, cor: '#9CA3AF' },
-  { nome: 'Interno de Enfermagem', minXp: 150, cor: '#3B82F6' },
-  { nome: 'Enfermeiro Júnior', minXp: 300, cor: '#22C55E' },
+  { nome: 'Interno de Enfermagem', minXp: 150, cor: '#38BDF8' },
+  { nome: 'Enfermeiro Júnior', minXp: 300, cor: '#10B981' },
   { nome: 'Enfermeiro Pleno', minXp: 500, cor: '#A855F7' },
   { nome: 'Especialista em Cardio', minXp: 700, cor: '#EF4444' },
   { nome: 'Mestre do Plantão', minXp: 850, cor: '#F97316' },
@@ -111,10 +111,10 @@ export default function DashboardScreen() {
         </View>
         <View style={styles.appBarActions}>
           <TouchableOpacity onPress={sairEResetar} style={styles.iconButton}>
-            <LogOut color="#94A3B8" size={20} />
+            <LogOut color="#DDD6FE" size={20} />
           </TouchableOpacity>
           <TouchableOpacity onPress={ganharXpTeste} style={styles.iconButton}>
-            <PlusCircle color="#38BDF8" size={20} />
+            <PlusCircle color="#10B981" size={20} />
           </TouchableOpacity>
         </View>
       </View>
@@ -145,14 +145,14 @@ export default function DashboardScreen() {
 
         <Text style={styles.sectionTitle}>Comandos de Emergência</Text>
 
-        {/* Prontuários Card UI+ */}
+        {/* Prontuários Card 3D Gamificado */}
         <TouchableOpacity 
           activeOpacity={0.85} 
-          style={styles.prontuarioCard}
+          style={styles.prontuarioCard3D}
           onPress={() => router.push('/prontuarios')}
         >
           <View style={styles.cardIconBox}>
-            <Stethoscope color="#FFFFFF" size={32} />
+            <Stethoscope color="#FFFFFF" size={30} />
           </View>
           <View style={styles.cardTextContainer}>
             <Text style={styles.cardTitle}>Galeria de Prontuários de Leito</Text>
@@ -161,36 +161,36 @@ export default function DashboardScreen() {
           <PlayCircle color="#FFFFFF" size={32} />
         </TouchableOpacity>
 
-        {/* Troféus Card UI+ */}
+        {/* Troféus Card 3D Gamificado */}
         <TouchableOpacity 
           activeOpacity={0.85} 
-          style={styles.trofeusCard}
+          style={styles.trofeusCard3D}
           onPress={() => router.push('/trofeus')}
         >
-          <View style={[styles.cardIconBox, { backgroundColor: '#FEF3C7' }]}>
-            <Trophy color="#D97706" size={30} />
+          <View style={[styles.cardIconBox, { backgroundColor: '#581C87' }]}>
+            <Trophy color="#F59E0B" size={28} />
           </View>
           <View style={styles.cardTextContainer}>
-            <Text style={[styles.cardTitle, { color: '#0F172A' }]}>Sala de Conquistas & Medalhas</Text>
-            <Text style={[styles.cardSubtitle, { color: '#64748B' }]}>Conquistas médicas e credenciais de especialização.</Text>
+            <Text style={styles.cardTitle}>Sala de Conquistas & Medalhas</Text>
+            <Text style={styles.cardSubtitleViolet}>Conquistas médicas e credenciais de especialização.</Text>
           </View>
-          <ChevronRight color="#D97706" size={28} />
+          <ChevronRight color="#F59E0B" size={28} />
         </TouchableOpacity>
 
-        {/* Estatísticas Card UI+ */}
+        {/* Estatísticas Card 3D Gamificado */}
         <TouchableOpacity 
           activeOpacity={0.85} 
-          style={styles.estatisticasCard}
+          style={styles.estatisticasCard3D}
           onPress={() => router.push('/estatisticas')}
         >
-          <View style={[styles.cardIconBox, { backgroundColor: '#DCFCE7' }]}>
-            <Activity color="#15803D" size={30} />
+          <View style={[styles.cardIconBox, { backgroundColor: '#4C1D95' }]}>
+            <Activity color="#38BDF8" size={28} />
           </View>
           <View style={styles.cardTextContainer}>
-            <Text style={[styles.cardTitle, { color: '#0F172A' }]}>Métricas de Assertividade</Text>
-            <Text style={[styles.cardSubtitle, { color: '#64748B' }]}>Tempo de resposta e precisão dos diagnósticos.</Text>
+            <Text style={styles.cardTitle}>Métricas de Assertividade</Text>
+            <Text style={styles.cardSubtitleViolet}>Tempo de resposta e precisão dos diagnósticos.</Text>
           </View>
-          <ChevronRight color="#15803D" size={28} />
+          <ChevronRight color="#38BDF8" size={28} />
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -200,17 +200,17 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#2E1065', // Deep Gamified Royal Purple
   },
   appBar: {
     height: 56,
-    backgroundColor: '#1E293B',
+    backgroundColor: '#3B0764',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#334155',
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#581C87',
     paddingTop: Platform.OS === 'android' ? 24 : 0,
   },
   appBarTitleGroup: {
@@ -235,11 +235,11 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   emergencyStatusBanner: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#3B0764',
     padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#334155',
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: '#6D28D9',
     marginBottom: 24,
   },
   statusRow: {
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   statusDesc: {
-    color: '#94A3B8',
+    color: '#DDD6FE',
     fontSize: 12,
     lineHeight: 18,
   },
@@ -265,38 +265,44 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     letterSpacing: 0.5,
   },
-  prontuarioCard: {
-    backgroundColor: '#2563EB',
+  prontuarioCard3D: {
+    backgroundColor: '#10B981', // Mint Green 3D
     padding: 18,
-    borderRadius: 18,
+    borderRadius: 20,
+    borderBottomWidth: 5,
+    borderBottomColor: '#047857',
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
-    shadowColor: '#2563EB',
+    shadowColor: '#10B981',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 10,
+    shadowRadius: 8,
     elevation: 4,
   },
-  trofeusCard: {
-    backgroundColor: '#FFFFFF',
+  trofeusCard3D: {
+    backgroundColor: '#3B0764',
     padding: 18,
-    borderRadius: 18,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#6D28D9',
+    borderBottomWidth: 5,
+    borderBottomColor: '#1E1B4B',
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
   },
-  estatisticasCard: {
-    backgroundColor: '#FFFFFF',
+  estatisticasCard3D: {
+    backgroundColor: '#3B0764',
     padding: 18,
-    borderRadius: 18,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#6D28D9',
+    borderBottomWidth: 5,
+    borderBottomColor: '#1E1B4B',
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
   },
   cardIconBox: {
     width: 52,
@@ -313,13 +319,18 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 15,
-    fontWeight: 'bold',
+    fontWeight: '900',
     color: '#FFFFFF',
     marginBottom: 2,
   },
   cardSubtitle: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: '#ECFDF5',
+    lineHeight: 16,
+  },
+  cardSubtitleViolet: {
+    fontSize: 12,
+    color: '#C4B5FD',
     lineHeight: 16,
   },
 });
