@@ -152,7 +152,7 @@ class CardioTheme {
         ),
         behavior: SnackBarBehavior.floating,
       ),
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: surfaceCard,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
