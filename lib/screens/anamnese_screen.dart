@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../theme/cardio_theme.dart';
+import '../widgets/cardio_hud_card.dart';
 
 class AnamneseScreen extends StatefulWidget {
   const AnamneseScreen({super.key});
@@ -11,38 +13,37 @@ class AnamneseScreen extends StatefulWidget {
 class _AnamneseScreenState extends State<AnamneseScreen> {
   int _perguntaAtual = 0;
 
-  // O nosso circuito de 3 perguntas para a Anamnese
   final List<Map<String, dynamic>> _perguntas = [
     {
-      'titulo': 'Passo 1: Caracterização da Dor',
-      'texto': 'Considerando o relato inicial do Sr. Carlos, qual característica da dor é o indicativo mais clássico de uma síndrome isquêmica miocárdica aguda?',
+      'titulo': 'PASSO 1: CARACTERIZAÇÃO DA DOR',
+      'texto': 'Considerando o relato inicial do Sr. Carlos, qual característica da dor torácica é o indicativo mais clássico de Síndrome Coronariana Aguda (SCA)?',
       'opcoes': [
-        'A) Dor em pontada que piora ao inspirar fundo.',
-        'B) Dor precordial opressiva (em aperto) irradiada para o membro superior esquerdo.',
-        'C) Dor em queimação na boca do estômago que melhora com alimentação.',
-        'D) Dor lombar com irradiação para a face posterior das pernas.'
+        'Dor em pontada que piora ao inspirar profundamente.',
+        'Dor precordial opressiva (em aperto) com irradiação para membro superior esquerdo e mandíbula.',
+        'Dor em queimação epigástrica que melhora imediatamente após alimentação.',
+        'Dor lombar com irradiação para face posterior dos membros inferiores.'
       ],
       'correta': 1,
     },
     {
-      'titulo': 'Passo 2: Fatores de Risco',
-      'texto': 'A dor é típica de infarto. Durante a coleta rápida da história (Sinais e Sintomas), quais fatores de risco são cruciais investigar para o Sr. Carlos agora?',
+      'titulo': 'PASSO 2: FATORES DE RISCO CORONARIANO',
+      'texto': 'A dor é altamente sugestiva de IAM. Durante a anamnese direcionada, quais fatores de risco são cruciais investigar de imediato?',
       'opcoes': [
-        'A) Histórico de asma crônica e alergias alimentares.',
-        'B) Frequência de viagens recentes ou contato com doenças infecciosas.',
-        'C) Hipertensão, Diabetes, Tabagismo prévio e histórico familiar de cardiopatia.',
-        'D) Prática de desportos radicais ou lesões ortopédicas recentes.'
+        'Histórico de asma brônquica e alergias alimentares sazonais.',
+        'Frequência de viagens internacionais recentes ou contato com infecções virais.',
+        'Hipertensão Arterial Sistêmica, Diabetes Mellitus, Tabagismo prévio e histórico familiar de DAC precoce.',
+        'Prática de esportes radicais ou traumas ortopédicos recentes.'
       ],
       'correta': 2,
     },
     {
-      'titulo': 'Passo 3: Alergias (Segurança)',
-      'texto': 'Você está prestes a avançar para os exames e a medicação.\n\nQual informação da anamnese é absolutamente VITAL confirmar agora para evitar um evento adverso grave nos próximos minutos?',
+      'titulo': 'PASSO 3: SEGURANÇA MEDICAMENTOSA & ALERGIAS',
+      'texto': 'Você está prestes a avançar para o ECG e a terapia antiplaquetária.\n\nQual dado da anamnese é absolutamente VITAL confirmar para prevenir eventos adversos graves?',
       'opcoes': [
-        'A) O tipo sanguíneo e fator Rh do paciente.',
-        'B) A última vez que o paciente urinou.',
-        'C) O estado de vacinação anual contra a gripe.',
-        'D) Histórico de alergias a medicamentos (especialmente AAS ou Iodo).'
+        'Tipo sanguíneo e fator Rh do paciente.',
+        'Volume da última diurese espontânea.',
+        'Histórico vacinal anual contra influenza.',
+        'Histórico de alergias medicamentosas (especialmente AAS, Dipirona ou contraste iodado).'
       ],
       'correta': 3,
     }
@@ -50,12 +51,11 @@ class _AnamneseScreenState extends State<AnamneseScreen> {
 
   void _verificarResposta(int indiceEscolhido) async {
     if (indiceEscolhido == _perguntas[_perguntaAtual]['correta']) {
-      // Se acertou, mas ainda há mais perguntas no circuito
       if (_perguntaAtual < _perguntas.length - 1) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Excelente investigação! Vamos para a próxima etapa.'),
-            backgroundColor: Colors.blue,
+            content: Text('Investigação Clínica Precisa! Próxima etapa...'),
+            backgroundColor: CardioTheme.primaryDark,
             duration: Duration(seconds: 1),
           ),
         );
@@ -63,37 +63,43 @@ class _AnamneseScreenState extends State<AnamneseScreen> {
           _perguntaAtual++;
         });
       } else {
-        // Acertou a ÚLTIMA pergunta! Recebe o XP e a chave para o Módulo 3.
         final prefs = await SharedPreferences.getInstance();
         int xpAtual = prefs.getInt('xpEnfermeiro') ?? 0;
-        await prefs.setInt('xpEnfermeiro', xpAtual + 150); // Dá os 150 XP
-        await prefs.setBool('venceu_mod2', true); // Destranca o ECG (Módulo 3)
+        await prefs.setInt('xpEnfermeiro', xpAtual + 150);
+        await prefs.setBool('venceu_mod2', true);
 
         if (mounted) {
           showDialog(
             context: context,
             barrierDismissible: false,
-            builder: (context) => AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            builder: (dialogCtx) => AlertDialog(
+              backgroundColor: CardioTheme.surfaceCard,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: const BorderSide(color: CardioTheme.cyanAccent, width: 1.5),
+              ),
               title: const Row(
                 children: [
-                  Icon(Icons.assignment_ind, color: Colors.blue, size: 30),
+                  Icon(Icons.assignment_ind, color: CardioTheme.cyanAccent, size: 28),
                   SizedBox(width: 10),
-                  Text('Anamnese Impecável!'),
+                  Text('Anamnese Impecável!', style: TextStyle(color: CardioTheme.textPrimary)),
                 ],
               ),
               content: const Text(
-                'Você coletou os dados vitais, confirmou os fatores de risco e garantiu a segurança medicamentosa do paciente.\n\nVocê ganhou +150 XP!',
-                style: TextStyle(fontSize: 16),
+                'Você identificou a dor típica, mapeou os fatores de risco e garantiu a segurança medicamentosa do paciente.\n\nVocê conquistou +150 XP!',
+                style: TextStyle(color: CardioTheme.textSecondary, fontSize: 15),
               ),
               actions: [
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: CardioTheme.cyanAccent,
+                    foregroundColor: CardioTheme.textDark,
+                  ),
                   onPressed: () {
-                    Navigator.pop(context); // Fecha o aviso
-                    Navigator.pop(context); // Volta ao prontuário
+                    Navigator.pop(dialogCtx);
+                    Navigator.pop(context);
                   },
-                  child: const Text('Continuar', style: TextStyle(color: Colors.white)),
+                  child: const Text('Continuar para ECG', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -101,12 +107,10 @@ class _AnamneseScreenState extends State<AnamneseScreen> {
         }
       }
     } else {
-      // Errou a resposta
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Atenção! Reveja os dados clínicos e as prioridades do atendimento de emergência.'),
-          backgroundColor: Colors.red[800],
-          behavior: SnackBarBehavior.floating,
+        const SnackBar(
+          content: Text('Atenção! Reveja os dados clínicos e prioridades de emergência.'),
+          backgroundColor: CardioTheme.statusGrave,
         ),
       );
     }
@@ -117,84 +121,142 @@ class _AnamneseScreenState extends State<AnamneseScreen> {
     final pergunta = _perguntas[_perguntaAtual];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: CardioTheme.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E3A8A),
-        title: const Text(
-          'Módulo 2: Anamnese',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        backgroundColor: CardioTheme.surface,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: CardioTheme.primary, size: 20),
+          onPressed: () => Navigator.pop(context),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          'MÓDULO 2 • ANAMNESE DIRECIONADA',
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Indicador de progresso (Etapa 1 de 3)
-            Text(
-              'Etapa ${_perguntaAtual + 1} de ${_perguntas.length}',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey),
-            ),
-            const SizedBox(height: 8),
-
-            // Cartão da Pergunta
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.blue.shade200, width: 2),
-                boxShadow: [
-                  BoxShadow(color: Colors.blue.withOpacity(0.1), blurRadius: 10, spreadRadius: 2),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    pergunta['titulo'],
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A)),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    pergunta['texto'],
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.black87),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 32),
-
-            // Gerador de Botões Dinâmico (Usando Container com BoxConstraints)
-            ...List.generate(pergunta['opcoes'].length, (index) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12.0),
-                child: Container(
-                  constraints: const BoxConstraints(minHeight: 60),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black87,
-                      padding: const EdgeInsets.all(16),
-                      alignment: Alignment.centerLeft,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(color: Colors.grey.shade300),
+      body: CyberGridBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Progresso HUD
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'ETAPA ${_perguntaAtual + 1} DE ${_perguntas.length}',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.1,
+                        color: CardioTheme.cyanAccent,
                       ),
-                      elevation: 2,
                     ),
-                    onPressed: () => _verificarResposta(index),
-                    child: Text(
-                      pergunta['opcoes'][index],
-                      style: const TextStyle(fontSize: 15),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: CardioTheme.cyanAccent.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        '+150 XP',
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: CardioTheme.cyanAccent),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: (_perguntaAtual + 1) / _perguntas.length,
+                    minHeight: 6,
+                    backgroundColor: CardioTheme.surfaceElevated,
+                    valueColor: const AlwaysStoppedAnimation<Color>(CardioTheme.cyanAccent),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Pergunta HUD
+                CardioHudCard(
+                  isGlowing: true,
+                  glowColor: CardioTheme.cyanAccent,
+                  headerTitle: pergunta['titulo'],
+                  headerIcon: Icons.history_edu,
+                  padding: const EdgeInsets.all(20),
+                  child: Text(
+                    pergunta['texto'],
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: CardioTheme.textPrimary,
+                      height: 1.4,
                     ),
                   ),
                 ),
-              );
-            }),
-          ],
+                const SizedBox(height: 24),
+
+                // Opções
+                ...List.generate(pergunta['opcoes'].length, (index) {
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: CardioTheme.surfaceCard,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: CardioTheme.borderSubtle, width: 1.0),
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => _verificarResposta(index),
+                        borderRadius: BorderRadius.circular(14),
+                        splashColor: CardioTheme.cyanAccent.withValues(alpha: 0.2),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 28,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: CardioTheme.cyanAccent.withValues(alpha: 0.15),
+                                  border: Border.all(color: CardioTheme.cyanAccent, width: 1.5),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    String.fromCharCode(65 + index),
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: CardioTheme.cyanAccent,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Text(
+                                  pergunta['opcoes'][index],
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: CardioTheme.textPrimary,
+                                    height: 1.3,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
         ),
       ),
     );

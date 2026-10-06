@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import '../data/casos_clinicos_data.dart';
+import '../models/caso_clinico.dart';
+import '../theme/cardio_theme.dart';
+import '../widgets/cardio_hud_card.dart';
+import '../widgets/telemetry_badge.dart';
 import 'triagem_screen.dart';
 import 'anamnese_screen.dart';
 import 'ecg_screen.dart';
@@ -9,15 +13,22 @@ import 'enzimas_screen.dart';
 import 'alta_screen.dart';
 
 class ProntuarioScreen extends StatefulWidget {
-  const ProntuarioScreen({super.key});
+  final String? casoInicialId;
+
+  const ProntuarioScreen({
+    super.key,
+    this.casoInicialId,
+  });
 
   @override
   State<ProntuarioScreen> createState() => _ProntuarioScreenState();
 }
 
 class _ProntuarioScreenState extends State<ProntuarioScreen> {
-  // Variáveis para controlar os cadeados (false = trancado)
-  // O módulo 1 (Triagem) já começa destrancado por padrão!
+  late CasoClinico _casoSelecionado;
+  int _tabFiltroLeitos = 0; // 0: Todos, 1: Sala Vermelha (Grave), 2: Observação
+
+  bool _mod1Concluido = false;
   bool _mod2Liberado = false;
   bool _mod3Liberado = false;
   bool _mod4Liberado = false;
@@ -27,223 +38,618 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
   @override
   void initState() {
     super.initState();
+    _definirCasoInicial();
     _carregarProgresso();
   }
 
-  // Função que abre a gaveta e verifica quais fases o aluno já passou
+  void _definirCasoInicial() {
+    if (widget.casoInicialId != null) {
+      _casoSelecionado = CasosClinicosData.casos.firstWhere(
+        (c) => c.id == widget.casoInicialId,
+        orElse: () => CasosClinicosData.casos.first,
+      );
+    } else {
+      _casoSelecionado = CasosClinicosData.casos.first;
+    }
+  }
+
   Future<void> _carregarProgresso() async {
     final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _mod1Concluido = prefs.getBool('venceu_mod1') ?? false;
+        _mod2Liberado = _mod1Concluido;
+        _mod3Liberado = prefs.getBool('venceu_mod2') ?? false;
+        _mod4Liberado = prefs.getBool('venceu_mod3') ?? false;
+        _mod5Liberado = prefs.getBool('venceu_mod4') ?? false;
+        _mod6Liberado = prefs.getBool('venceu_mod5') ?? false;
+      });
+    }
+  }
+
+  void _trocarPaciente(CasoClinico caso) {
     setState(() {
-      _mod2Liberado = prefs.getBool('venceu_mod1') ?? false;
-      _mod3Liberado = prefs.getBool('venceu_mod2') ?? false;
-      _mod4Liberado = prefs.getBool('venceu_mod3') ?? false;
-      _mod5Liberado = prefs.getBool('venceu_mod4') ?? false;
-      _mod6Liberado = prefs.getBool('venceu_mod5') ?? false;
+      _casoSelecionado = caso;
     });
+  }
+
+  List<CasoClinico> _obterCasosFiltrados() {
+    if (_tabFiltroLeitos == 1) {
+      return CasosClinicosData.casos.where((c) => c.gravidade == 'GRAVE').toList();
+    } else if (_tabFiltroLeitos == 2) {
+      return CasosClinicosData.casos.where((c) => c.gravidade != 'GRAVE').toList();
+    }
+    return CasosClinicosData.casos;
   }
 
   @override
   Widget build(BuildContext context) {
+    final casosExibidos = _obterCasosFiltrados();
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: CardioTheme.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E3A8A),
-        title: const Text(
-          'Prontuário: Sr. Carlos',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        backgroundColor: CardioTheme.surface,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: CardioTheme.primary, size: 20),
+          onPressed: () => Navigator.pop(context),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          'CENTRAL DE PRONTUÁRIOS & LEITOS',
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Ficha de Admissão do Paciente
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: const Border(left: BorderSide(color: Colors.red, width: 6)),
-                boxShadow: [
-                  BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 10, spreadRadius: 2),
-                ],
-              ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: CyberGridBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // 1. Abas de Filtro de Leitos (Inspirado na Imagem 3: Todos, Em Atendimento, Concluídos)
+                Row(
+                  children: [
+                    _buildPillTab('Todos os Leitos (4)', 0),
+                    const SizedBox(width: 8),
+                    _buildPillTab('Sala Vermelha (2)', 1),
+                    const SizedBox(width: 8),
+                    _buildPillTab('Observação (2)', 2),
+                  ],
+                ),
+                const SizedBox(height: 14),
+
+                // 2. Carrossel Horizontal / Seletor Rápido de Pacientes
+                SizedBox(
+                  height: 84,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: casosExibidos.length,
+                    separatorBuilder: (context, index) => const SizedBox(width: 10),
+                    itemBuilder: (context, index) {
+                      final paciente = casosExibidos[index];
+                      final isSelected = paciente.id == _casoSelecionado.id;
+                      final isGrave = paciente.gravidade == 'GRAVE';
+                      final Color statusColor = isGrave ? CardioTheme.statusGrave : CardioTheme.statusMuitoUrgente;
+
+                      return GestureDetector(
+                        onTap: () => _trocarPaciente(paciente),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          width: 200,
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: isSelected ? CardioTheme.surfaceCard : CardioTheme.surface.withValues(alpha: 0.6),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: isSelected ? statusColor : CardioTheme.borderSubtle,
+                              width: isSelected ? 2.0 : 1.0,
+                            ),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: statusColor.withValues(alpha: 0.25),
+                                      blurRadius: 10,
+                                      spreadRadius: 0,
+                                    )
+                                  ]
+                                : null,
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 42,
+                                height: 42,
+                                decoration: BoxDecoration(
+                                  color: CardioTheme.surfaceElevated,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: statusColor, width: 1),
+                                ),
+                                child: Center(
+                                  child: Text(paciente.avatar, style: const TextStyle(fontSize: 22)),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      paciente.nome,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: isSelected ? CardioTheme.textPrimary : CardioTheme.textSecondary,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      '${paciente.leito} • ${paciente.gravidade}',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: statusColor,
+                                      ),
+                                      maxLines: 1,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 18),
+
+                // 3. Banner HUD do Paciente Ativo
+                CardioHudCard(
+                  isGlowing: true,
+                  glowColor: _casoSelecionado.gravidade == 'GRAVE' ? CardioTheme.statusGrave : CardioTheme.statusMuitoUrgente,
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('ADMISSÃO', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
-                      Text('19:00', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.red)),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              color: CardioTheme.surfaceElevated,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: _casoSelecionado.gravidade == 'GRAVE' ? CardioTheme.statusGrave : CardioTheme.statusMuitoUrgente,
+                                width: 2,
+                              ),
+                              boxShadow: CardioTheme.neonGlow(
+                                color: _casoSelecionado.gravidade == 'GRAVE' ? CardioTheme.statusGrave : CardioTheme.statusMuitoUrgente,
+                                opacity: 0.3,
+                                blur: 10,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(_casoSelecionado.avatar, style: const TextStyle(fontSize: 32)),
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        _casoSelecionado.nome,
+                                        style: const TextStyle(
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: 0.8,
+                                          color: CardioTheme.textPrimary,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: (_casoSelecionado.gravidade == 'GRAVE'
+                                                ? CardioTheme.statusGrave
+                                                : CardioTheme.statusMuitoUrgente)
+                                            .withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(
+                                          color: _casoSelecionado.gravidade == 'GRAVE'
+                                              ? CardioTheme.statusGrave
+                                              : CardioTheme.statusMuitoUrgente,
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        _casoSelecionado.gravidade,
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: _casoSelecionado.gravidade == 'GRAVE'
+                                              ? CardioTheme.statusGrave
+                                              : CardioTheme.statusMuitoUrgente,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${_casoSelecionado.idade} anos • ${_casoSelecionado.sexo} • ${_casoSelecionado.leito}',
+                                  style: const TextStyle(fontSize: 12, color: CardioTheme.textSecondary),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Local: ${_casoSelecionado.sala}',
+                                  style: const TextStyle(fontSize: 11, color: CardioTheme.cyanAccent),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Médico: ${_casoSelecionado.medicoResponsavel}',
+                                  style: const TextStyle(fontSize: 11, color: CardioTheme.textMuted),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      const Divider(color: CardioTheme.borderSubtle, height: 1),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'QUEIXA PRINCIPAL:',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.0,
+                          color: CardioTheme.textMuted,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _casoSelecionado.queixaPrincipal,
+                        style: const TextStyle(fontSize: 13, color: CardioTheme.textPrimary, height: 1.3),
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'EVOLUÇÃO CLÍNICA & CONDUTA:',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.0,
+                          color: CardioTheme.textMuted,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _casoSelecionado.conduta,
+                        style: const TextStyle(fontSize: 12, color: CardioTheme.textSecondary, height: 1.3),
+                      ),
                     ],
                   ),
-                  SizedBox(height: 8),
-                  Text('Sr. Carlos Mendes, 62 anos', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A))),
-                  SizedBox(height: 8),
-                  Text('Motivo: Dor torácica opressiva (9/10) irradiada para membro superior esquerdo, iniciada há 40 minutos.', style: TextStyle(fontSize: 14, color: Colors.black87)),
-                ],
-              ),
-            ),
-            const SizedBox(height: 32),
-            const Text(
-              'Evolução Clínica',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
-            ),
-            const SizedBox(height: 16),
+                ),
+                const SizedBox(height: 16),
 
-            // Módulo 1: Triagem (Sempre Liberado)
-            _buildModuloDesafio(
-              titulo: '1. Triagem (Manchester)',
-              descricao: 'Classifique o risco deste paciente rapidamente.',
-              icone: Icons.local_hospital,
-              cor: Colors.orange,
-              isLocked: false,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const TriagemScreen()),
-                ).then((_) => _carregarProgresso()); // Recarrega os cadeados ao voltar!
-              },
-            ),
+                // 4. Sinais Vitais do Paciente Selecionado
+                CardioHudCard(
+                  headerTitle: 'SINAIS VITAIS DO LEITO (${_casoSelecionado.leito})',
+                  headerIcon: Icons.speed,
+                  padding: const EdgeInsets.all(14),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        TelemetryBadge(
+                          label: 'FC',
+                          value: _casoSelecionado.frequenciaCardiaca,
+                          icon: Icons.favorite,
+                          isWarning: _casoSelecionado.fcCritica,
+                          trend: _casoSelecionado.fcCritica ? 'up' : 'stable',
+                        ),
+                        const SizedBox(width: 8),
+                        TelemetryBadge(
+                          label: 'PA',
+                          value: _casoSelecionado.pressaoArterial,
+                          icon: Icons.speed,
+                          isWarning: _casoSelecionado.paCritica,
+                          trend: _casoSelecionado.paCritica ? 'up' : 'stable',
+                        ),
+                        const SizedBox(width: 8),
+                        TelemetryBadge(
+                          label: 'SpO2',
+                          value: _casoSelecionado.saturacaoO2,
+                          icon: Icons.water_drop,
+                          isWarning: _casoSelecionado.spo2Critica,
+                          trend: _casoSelecionado.spo2Critica ? 'down' : 'stable',
+                        ),
+                        const SizedBox(width: 8),
+                        TelemetryBadge(
+                          label: 'Temp',
+                          value: _casoSelecionado.temperatura,
+                          icon: Icons.thermostat,
+                          isWarning: false,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
 
-            // Módulo 2: Anamnese (Depende do Módulo 1)
-            _buildModuloDesafio(
-              titulo: '2. Anamnese Direcionada',
-              descricao: 'Colete sinais vitais e histórico médico.',
-              icone: Icons.assignment_ind,
-              cor: Colors.blue,
-              isLocked: !_mod2Liberado,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const AnamneseScreen()),
-                ).then((_) => _carregarProgresso());
-              },
-            ),
+                // 5. Módulos de Decisão Clínica
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'CIRCUITO DE CONDUTAS CLÍNICAS (${_casoSelecionado.leito.toUpperCase()})',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.1,
+                        color: CardioTheme.primary,
+                      ),
+                    ),
+                    Text(
+                      _casoSelecionado.classificacaoManchester.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: _casoSelecionado.gravidade == 'GRAVE'
+                            ? CardioTheme.statusGrave
+                            : CardioTheme.statusMuitoUrgente,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
 
-            // Módulo 3: ECG (Depende do Módulo 2)
-            _buildModuloDesafio(
-              titulo: '3. Eletrocardiograma (ECG)',
-              descricao: 'Identifique possíveis alterações isquêmicas.',
-              icone: Icons.monitor_heart,
-              cor: Colors.green,
-              isLocked: !_mod3Liberado,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const EcgScreen()),
-                ).then((_) => _carregarProgresso());
-              },
-            ),
+                // Módulo 1: Triagem Manchester
+                _buildModuloTile(
+                  numero: '1',
+                  titulo: 'Triagem (Protocolo Manchester)',
+                  descricao: 'Classifique o risco e defina o tempo porta-atendimento de emergência.',
+                  xp: '+150 XP',
+                  isLiberado: true,
+                  isConcluido: _mod1Concluido,
+                  icon: Icons.filter_alt_outlined,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const TriagemScreen()),
+                  ).then((_) => _carregarProgresso()),
+                ),
 
-            // Módulo 4: Protocolo MONA (Depende do Módulo 3)
-            _buildModuloDesafio(
-              titulo: '4. Intervenção Farmacológica',
-              descricao: 'Prescreva as medicações do protocolo inicial.',
-              icone: Icons.medication,
-              cor: Colors.purple,
-              isLocked: !_mod4Liberado,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ProtocoloScreen()),
-                ).then((_) => _carregarProgresso());
-              },
-            ),
+                // Módulo 2: Anamnese
+                _buildModuloTile(
+                  numero: '2',
+                  titulo: 'Anamnese Direcionada',
+                  descricao: 'Investigue fatores de risco, histórico cardiovascular e segurança medicamentosa.',
+                  xp: '+150 XP',
+                  isLiberado: _mod2Liberado,
+                  isConcluido: _mod3Liberado,
+                  icon: Icons.history_edu_outlined,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const AnamneseScreen()),
+                  ).then((_) => _carregarProgresso()),
+                ),
 
-            // Módulo 5: Enzimas (Depende do Módulo 4)
-            _buildModuloDesafio(
-              titulo: '5. Laboratório (Biomarcadores)',
-              descricao: 'Avalie a curva enzimática do paciente.',
-              icone: Icons.science,
-              cor: Colors.indigo,
-              isLocked: !_mod5Liberado,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const EnzimasScreen()),
-                ).then((_) => _carregarProgresso());
-              },
-            ),
+                // Módulo 3: ECG
+                _buildModuloTile(
+                  numero: '3',
+                  titulo: 'Eletrocardiograma (ECG)',
+                  descricao: 'Avalie o traçado: ${_casoSelecionado.ecgResumo}.',
+                  xp: '+200 XP',
+                  isLiberado: _mod3Liberado,
+                  isConcluido: _mod4Liberado,
+                  icon: Icons.monitor_heart_outlined,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const EcgScreen()),
+                  ).then((_) => _carregarProgresso()),
+                ),
 
-            // Módulo 6: Alta Médica (Depende do Módulo 5)
-            _buildModuloDesafio(
-              titulo: '6. Alta e Orientações',
-              descricao: 'Educação em saúde para prevenção secundária.',
-              icone: Icons.health_and_safety,
-              cor: Colors.teal,
-              isLocked: !_mod6Liberado,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const AltaScreen()),
-                ).then((_) => _carregarProgresso());
-              },
+                // Módulo 4: Protocolo MONA
+                _buildModuloTile(
+                  numero: '4',
+                  titulo: 'Protocolo Farmacológico (MONA)',
+                  descricao: 'Selecione e administre as medicações imediatas indicadas.',
+                  xp: '+200 XP',
+                  isLiberado: _mod4Liberado,
+                  isConcluido: _mod5Liberado,
+                  icon: Icons.medication_outlined,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ProtocoloScreen()),
+                  ).then((_) => _carregarProgresso()),
+                ),
+
+                // Módulo 5: Enzimas Cardíacas
+                _buildModuloTile(
+                  numero: '5',
+                  titulo: 'Enzimas Cardíacas',
+                  descricao: 'Laboratório: ${_casoSelecionado.enzimasResumo}.',
+                  xp: '+150 XP',
+                  isLiberado: _mod5Liberado,
+                  isConcluido: _mod6Liberado,
+                  icon: Icons.biotech_outlined,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const EnzimasScreen()),
+                  ).then((_) => _carregarProgresso()),
+                ),
+
+                // Módulo 6: Alta e Encaminhamento
+                _buildModuloTile(
+                  numero: '6',
+                  titulo: 'Conduta e Desfecho Clínico',
+                  descricao: 'Encaminhamento adequado e plano de orientação em saúde.',
+                  xp: '+150 XP',
+                  isLiberado: _mod6Liberado,
+                  isConcluido: false,
+                  icon: Icons.check_circle_outline,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const AltaScreen()),
+                  ).then((_) => _carregarProgresso()),
+                ),
+                const SizedBox(height: 16),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildModuloDesafio({
+  Widget _buildPillTab(String label, int index) {
+    final isSelected = _tabFiltroLeitos == index;
+    return GestureDetector(
+      onTap: () => setState(() => _tabFiltroLeitos = index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? CardioTheme.primary.withValues(alpha: 0.2) : CardioTheme.surfaceCard,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? CardioTheme.primary : CardioTheme.borderSubtle,
+            width: 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: isSelected ? CardioTheme.primary : CardioTheme.textMuted,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModuloTile({
+    required String numero,
     required String titulo,
     required String descricao,
-    required IconData icone,
-    required Color cor,
-    required bool isLocked,
-    VoidCallback? onTap,
+    required String xp,
+    required bool isLiberado,
+    required bool isConcluido,
+    required IconData icon,
+    required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: isLocked ? null : onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isLocked ? Colors.grey[200] : Colors.white,
+    final borderColor = isConcluido
+        ? CardioTheme.primary
+        : isLiberado
+            ? CardioTheme.cyanAccent
+            : CardioTheme.borderSubtle;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: isLiberado ? CardioTheme.surfaceCard : CardioTheme.surface.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor, width: isLiberado ? 1.5 : 1.0),
+        boxShadow: isLiberado
+            ? CardioTheme.neonGlow(color: borderColor, opacity: 0.15, blur: 12)
+            : null,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isLiberado ? onTap : null,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isLocked ? Colors.transparent : cor.withOpacity(0.5), width: 2),
-          boxShadow: isLocked ? [] : [
-            BoxShadow(color: cor.withOpacity(0.1), blurRadius: 8, spreadRadius: 1),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isLocked ? Colors.grey[300] : cor.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(isLocked ? Icons.lock : icone, color: isLocked ? Colors.grey[500] : cor),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    titulo,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: isLocked ? Colors.grey[600] : Colors.black87,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: isLiberado
+                        ? borderColor.withValues(alpha: 0.15)
+                        : CardioTheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isLiberado ? borderColor : CardioTheme.borderSubtle,
+                      width: 1,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    descricao,
-                    style: TextStyle(fontSize: 12, color: isLocked ? Colors.grey[500] : Colors.grey[700]),
+                  child: Icon(
+                    isLiberado ? icon : Icons.lock_outline,
+                    color: isLiberado ? borderColor : CardioTheme.textMuted,
+                    size: 22,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              titulo,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: isLiberado ? CardioTheme.textPrimary : CardioTheme.textMuted,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: isConcluido
+                                  ? CardioTheme.primary.withValues(alpha: 0.2)
+                                  : CardioTheme.surfaceElevated,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              isConcluido ? 'CONCLUÍDO' : xp,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: isConcluido ? CardioTheme.primary : CardioTheme.cyanAccent,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        descricao,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isLiberado ? CardioTheme.textSecondary : CardioTheme.textMuted.withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  isLiberado ? Icons.arrow_forward_ios_rounded : Icons.lock,
+                  size: 14,
+                  color: isLiberado ? borderColor : CardioTheme.textMuted,
+                ),
+              ],
             ),
-            if (!isLocked)
-              Icon(Icons.play_circle_fill, color: cor, size: 28),
-          ],
+          ),
         ),
       ),
     );

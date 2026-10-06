@@ -1,0 +1,61 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(./docs/**)",
+      "Read(./lib/**)",
+      "Read(./test/**)",
+      "Edit(./lib/**)",
+      "Edit(./test/**)",
+      "Edit(./docs/**)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(flutter test*)",
+      "Bash(flutter analyze*)",
+      "Bash(flutter pub *)",
+      "Bash(dart format *)"
+    ],
+    "deny": [
+      "Read(./.env*)",
+      "Read(./**/.env*)",
+      "Read(./**/secrets/**)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)",
+      "Read(./**/*.jks)",
+      "Read(./**/*.keystore)",
+      "Bash(rm -rf *)",
+      "Bash(chmod 777 *)",
+      "Bash(git push --force*)",
+      "Bash(*DROP DATABASE*)",
+      "Bash(*TRUNCATE*)"
+    ],
+    "ask": [
+      "Bash(git push *)",
+      "Bash(flutter build *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/pre-tool-use.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/post-edit-format.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

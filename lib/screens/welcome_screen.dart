@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
-import 'dashboard_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../theme/cardio_theme.dart';
+import '../widgets/cardio_button.dart';
+import '../widgets/cardio_hud_card.dart';
+import 'dashboard_screen.dart';
+
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
 
@@ -9,41 +13,90 @@ class WelcomeScreen extends StatefulWidget {
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
-  // Variáveis para guardar o que o usuário digitar e escolher
   String _nomeEnfermeiro = '';
   int _avatarSelecionado = 0;
 
-  // Lista simples de avatares (usando emojis para facilitar agora)
-  final List<String> _avatares = ['👨‍⚕️', '👩‍⚕️', '🧑‍⚕️', '👨🏿‍⚕️', '👩🏽‍⚕️', '👱‍♀️'];
+  // Lista de Avatares Clínicos Especializados e Bem Diferenciados
+  final List<Map<String, dynamic>> _avataresProfissionais = [
+    {
+      'emoji': '🩺',
+      'papel': 'Enf. Emergência',
+      'especialidade': 'Sala Vermelha',
+      'cor': CardioTheme.statusGrave,
+      'icone': Icons.local_hospital,
+    },
+    {
+      'emoji': '🫀',
+      'papel': 'Especialista Cardio',
+      'especialidade': 'Hemodinâmica',
+      'cor': CardioTheme.primary,
+      'icone': Icons.monitor_heart,
+    },
+    {
+      'emoji': '⚡',
+      'papel': 'Intensivista',
+      'especialidade': 'CTI Cardiológico',
+      'cor': CardioTheme.cyanAccent,
+      'icone': Icons.bolt,
+    },
+    {
+      'emoji': '🚑',
+      'papel': 'Socorrista',
+      'especialidade': 'Resgate / SAMU',
+      'cor': CardioTheme.statusMuitoUrgente,
+      'icone': Icons.emergency,
+    },
+    {
+      'emoji': '🧬',
+      'papel': 'Bioquímico(a)',
+      'especialidade': 'Laboratório / Biomarcadores',
+      'cor': Colors.purpleAccent,
+      'icone': Icons.science,
+    },
+    {
+      'emoji': '👔',
+      'papel': 'Chefe de Plantão',
+      'especialidade': 'Coordenação Clínica',
+      'cor': CardioTheme.statusUrgente,
+      'icone': Icons.admin_panel_settings,
+    },
+  ];
 
-  // Colocamos o "async" aqui para o Flutter saber que haverá uma pequena espera
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   void _baterPonto() async {
-    if (_nomeEnfermeiro.trim().isEmpty) {
+    final nome = _nomeEnfermeiro.trim();
+    if (nome.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Por favor, digite seu nome no crachá.'),
-          backgroundColor: Colors.red,
+          content: Text('Por favor, digite seu nome no crachá para assumir o plantão.'),
+          backgroundColor: CardioTheme.statusGrave,
         ),
       );
       return;
     }
 
-    // 1. Abrimos a gaveta do celular
+    final avatarData = _avataresProfissionais[_avatarSelecionado];
+    final avatarEmoji = avatarData['emoji'] as String;
+
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('nomeEnfermeiro', nome);
+    await prefs.setString('avatarEnfermeiro', avatarEmoji);
+    await prefs.setString('cargoEnfermeiro', avatarData['papel'] as String);
 
-    // 2. Guardamos o nome e o avatar com "etiquetas" fáceis de lembrar
-    await prefs.setString('nomeEnfermeiro', _nomeEnfermeiro);
-    await prefs.setString('avatarEnfermeiro', _avatares[_avatarSelecionado]);
-
-    // 3. O usuário vai para a nova tela, igualzinho antes
-    // O "mounted" é uma regra de segurança do Flutter para telas que mudam após um "await"
     if (mounted) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (context) => DashboardScreen(
-            nomeEnfermeiro: _nomeEnfermeiro,
-            avatar: _avatares[_avatarSelecionado],
+            nomeEnfermeiro: nome,
+            avatar: avatarEmoji,
           ),
         ),
       );
@@ -53,131 +106,249 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      // SafeArea evita que o aplicativo fique escondido atrás do "notch" ou câmera do celular
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 40),
-              // Cabeçalho
-              Row(
-                children: [
-                  Icon(Icons.monitor_heart, color: Colors.red[600], size: 40),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'CardioQuest',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1E3A8A),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 40),
-              const Text(
-                'Identificação Profissional',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Configure seu crachá para iniciar o plantão.',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-              const SizedBox(height: 32),
-
-              // Campo de Nome
-              const Text(
-                'NOME DO ENFERMEIRO(A)',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                onChanged: (valor) {
-                  setState(() {
-                    _nomeEnfermeiro = valor;
-                  });
-                },
-                decoration: InputDecoration(
-                  hintText: 'Digite seu nome...',
-                  prefixIcon: const Icon(Icons.badge, color: Colors.grey),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // Escolha de Avatar
-              const Text(
-                'SELECIONE SEU AVATAR',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 16,
-                runSpacing: 16,
-                children: List.generate(_avatares.length, (index) {
-                  final isSelecionado = _avatarSelecionado == index;
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _avatarSelecionado = index;
-                      });
-                    },
-                    child: Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: isSelecionado ? Colors.blue[100] : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isSelecionado ? Colors.blue : Colors.transparent,
-                          width: 2,
-                        ),
-                        boxShadow: [
-                          if (!isSelecionado)
-                            BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 4, spreadRadius: 1)
+      backgroundColor: CardioTheme.background,
+      body: CyberGridBackground(
+        showHeartbeat: true,
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 580),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Cabeçalho da Marca
+                    Center(
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: CardioTheme.surfaceElevated,
+                              border: Border.all(color: CardioTheme.primary, width: 2),
+                              boxShadow: CardioTheme.neonGlow(opacity: 0.4, blur: 20),
+                            ),
+                            child: const Icon(
+                              Icons.monitor_heart,
+                              color: CardioTheme.primary,
+                              size: 44,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'CardioQuest',
+                            style: TextStyle(
+                              fontSize: 34,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.5,
+                              color: CardioTheme.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'TECNOLOGIA A SERVIÇO DA VIDA',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2.2,
+                              color: CardioTheme.primary,
+                            ),
+                          ),
                         ],
                       ),
-                      child: Center(
-                        child: Text(_avatares[index], style: const TextStyle(fontSize: 32)),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Painel Central HUD
+                    CardioHudCard(
+                      isGlowing: true,
+                      headerTitle: 'ACESSO AO SISTEMA • IDENTIFICAÇÃO PROFISSIONAL',
+                      headerIcon: Icons.badge_outlined,
+                      padding: const EdgeInsets.all(22),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'NOME DO PROFISSIONAL',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.1,
+                              color: CardioTheme.textMuted,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _controller,
+                            style: const TextStyle(color: CardioTheme.textPrimary, fontWeight: FontWeight.w600),
+                            onChanged: (valor) => setState(() => _nomeEnfermeiro = valor),
+                            decoration: InputDecoration(
+                              hintText: 'Digite seu nome para o crachá...',
+                              hintStyle: const TextStyle(color: CardioTheme.textMuted, fontSize: 14),
+                              prefixIcon: const Icon(Icons.person_outline, color: CardioTheme.primary),
+                              filled: true,
+                              fillColor: CardioTheme.surface,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: CardioTheme.borderSubtle, width: 1.2),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: CardioTheme.primary, width: 1.8),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 22),
+
+                          const Text(
+                            'SELECIONE SUA ESPECIALIDADE / AVATAR NO PLANTÃO',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.1,
+                              color: CardioTheme.textMuted,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Grid de Avatares Clínicos Diferenciados
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3,
+                              childAspectRatio: 1.4,
+                              crossAxisSpacing: 10,
+                              mainAxisSpacing: 10,
+                            ),
+                            itemCount: _avataresProfissionais.length,
+                            itemBuilder: (context, index) {
+                              final item = _avataresProfissionais[index];
+                              final isSelecionado = _avatarSelecionado == index;
+                              final Color corItem = item['cor'] as Color;
+
+                              return GestureDetector(
+                                onTap: () => setState(() => _avatarSelecionado = index),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 180),
+                                  decoration: BoxDecoration(
+                                    color: isSelecionado
+                                        ? corItem.withValues(alpha: 0.15)
+                                        : CardioTheme.surface,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: isSelecionado ? corItem : CardioTheme.borderSubtle,
+                                      width: isSelecionado ? 2.0 : 1.0,
+                                    ),
+                                    boxShadow: isSelecionado
+                                        ? [
+                                            BoxShadow(
+                                              color: corItem.withValues(alpha: 0.35),
+                                              blurRadius: 10,
+                                              spreadRadius: 0,
+                                            )
+                                          ]
+                                        : null,
+                                  ),
+                                  padding: const EdgeInsets.all(8),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            item['emoji'] as String,
+                                            style: const TextStyle(fontSize: 22),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Icon(
+                                            item['icone'] as IconData,
+                                            size: 14,
+                                            color: isSelecionado ? corItem : CardioTheme.textMuted,
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        item['papel'] as String,
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: isSelecionado ? corItem : CardioTheme.textPrimary,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Botão Bater Ponto & Assumir Plantão
+                          CardioButton(
+                            label: 'BATER PONTO & ASSUMIR PLANTÃO',
+                            icon: Icons.local_hospital_outlined,
+                            onPressed: _baterPonto,
+                          ),
+                        ],
                       ),
                     ),
-                  );
-                }),
-              ),
-              const SizedBox(height: 60),
+                    const SizedBox(height: 28),
 
-              // Botão Bater Ponto
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _baterPonto,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1E3A8A),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    // Rodapé com pilares
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Text(
+                          'AGILIDADE',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.5,
+                            color: CardioTheme.textMuted,
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 10),
+                          child: Icon(Icons.circle, size: 5, color: CardioTheme.primary),
+                        ),
+                        Text(
+                          'PRECISÃO',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.5,
+                            color: CardioTheme.textMuted,
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 10),
+                          child: Icon(Icons.circle, size: 5, color: CardioTheme.primary),
+                        ),
+                        Text(
+                          'VIDAS',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.5,
+                            color: CardioTheme.textMuted,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Bater Ponto', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                      SizedBox(width: 8),
-                      Icon(Icons.arrow_forward, color: Colors.white),
-                    ],
-                  ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),

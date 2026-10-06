@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/welcome_screen.dart';
 import 'screens/dashboard_screen.dart';
 
+import 'theme/cardio_theme.dart';
+
 // O main agora é "async" para poder ler a gaveta antes de ligar a tela
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,13 +22,13 @@ void main() async {
   final String? avatarSalvo = prefs.getString('avatarEnfermeiro');
 
   // Lógica inteligente: Qual tela mostrar primeiro?
-  Widget telaInicial = const WelcomeScreen(); // Por padrão, tela de bater ponto
+  Widget telaInicial = const WelcomeScreen(); // Por padrão, tela de identificação
 
   // Se encontrou um nome salvo, muda a tela inicial direto para o Dashboard!
   if (nomeSalvo != null && avatarSalvo != null && nomeSalvo.isNotEmpty) {
     telaInicial = DashboardScreen(
-        nomeEnfermeiro: nomeSalvo,
-        avatar: avatarSalvo
+      nomeEnfermeiro: nomeSalvo,
+      avatar: avatarSalvo,
     );
   }
 
@@ -37,7 +39,6 @@ void main() async {
 class CardioQuestApp extends StatelessWidget {
   final Widget telaInicial;
 
-  // O aplicativo agora recebe a tela inicial que decidimos ali em cima
   const CardioQuestApp({super.key, required this.telaInicial});
 
   @override
@@ -45,13 +46,10 @@ class CardioQuestApp extends StatelessWidget {
     return MaterialApp(
       title: 'CardioQuest',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primaryColor: const Color(0xFF1E3A8A),
-        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1E3A8A)),
-        useMaterial3: true,
-      ),
-      home: telaInicial, // Usa a tela que o main() definiu
+      theme: CardioTheme.darkTheme,
+      darkTheme: CardioTheme.darkTheme,
+      themeMode: ThemeMode.dark,
+      home: telaInicial,
     );
   }
 }
