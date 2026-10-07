@@ -16,7 +16,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   String _nomeEnfermeiro = '';
   int _avatarSelecionado = 0;
 
-  // Lista de Avatares Clínicos (Apenas Imagens)
+  // Lista de Avatares Clínicos (3 Homens e 3 Mulheres Enfermeiros)
   final List<Map<String, dynamic>> _avataresProfissionais = [
     {
       'emoji': '👨‍⚕️',
@@ -24,18 +24,28 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       'cor': CardioTheme.primary,
     },
     {
-      'emoji': '👩‍⚕️',
-      'asset': 'assets/avatars/avatar_anapaula.jpg',
-      'cor': CardioTheme.cyanAccent,
-    },
-    {
       'emoji': '👨‍⚕️',
       'asset': 'assets/avatars/avatar_roberto.jpg',
       'cor': CardioTheme.statusGrave,
     },
     {
+      'emoji': '👨‍⚕️',
+      'asset': 'assets/avatars/avatar_marcos.jpg',
+      'cor': CardioTheme.cyanAccent,
+    },
+    {
       'emoji': '👩‍⚕️',
-      'asset': 'assets/avatars/avatar_doctor.jpg',
+      'asset': 'assets/avatars/avatar_anapaula.jpg',
+      'cor': CardioTheme.cyanAccent,
+    },
+    {
+      'emoji': '👩‍⚕️',
+      'asset': 'assets/avatars/avatar_juliana.jpg',
+      'cor': CardioTheme.primary,
+    },
+    {
+      'emoji': '👩‍⚕️',
+      'asset': 'assets/avatars/avatar_beatriz.jpg',
       'cor': CardioTheme.statusMuitoUrgente,
     },
   ];
@@ -188,7 +198,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           const SizedBox(height: 22),
 
                           const Text(
-                            'SELECIONE SEU AVATAR',
+                            'SELECIONE SEU AVATAR (3 ENFERMEIROS / 3 ENFERMEIRAS)',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -198,90 +208,94 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           ),
                           const SizedBox(height: 14),
 
-                          // Fileira de Imagens dos Avatares (Sem textos ou títulos)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: List.generate(_avataresProfissionais.length, (index) {
-                              final item = _avataresProfissionais[index];
-                              final isSelecionado = _avatarSelecionado == index;
-                              final Color corItem = isSelecionado ? CardioTheme.cyanAccent : CardioTheme.borderSubtle;
+                          // Grade Flexível de Imagens dos Avatares (3 Homens e 3 Mulheres)
+                          Center(
+                            child: Wrap(
+                              spacing: 14,
+                              runSpacing: 14,
+                              alignment: WrapAlignment.center,
+                              children: List.generate(_avataresProfissionais.length, (index) {
+                                final item = _avataresProfissionais[index];
+                                final isSelecionado = _avatarSelecionado == index;
+                                final Color corItem = isSelecionado ? CardioTheme.cyanAccent : CardioTheme.borderSubtle;
 
-                              return GestureDetector(
-                                onTap: () => setState(() => _avatarSelecionado = index),
-                                child: Stack(
-                                  clipBehavior: Clip.none,
-                                  children: [
-                                    AnimatedContainer(
-                                      duration: const Duration(milliseconds: 200),
-                                      width: 68,
-                                      height: 68,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: corItem,
-                                          width: isSelecionado ? 2.8 : 1.5,
+                                return GestureDetector(
+                                  onTap: () => setState(() => _avatarSelecionado = index),
+                                  child: Stack(
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      AnimatedContainer(
+                                        duration: const Duration(milliseconds: 200),
+                                        width: 66,
+                                        height: 66,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: corItem,
+                                            width: isSelecionado ? 2.8 : 1.5,
+                                          ),
+                                          boxShadow: isSelecionado
+                                              ? [
+                                                  BoxShadow(
+                                                    color: CardioTheme.cyanAccent.withValues(alpha: 0.4),
+                                                    blurRadius: 14,
+                                                    spreadRadius: 2,
+                                                  )
+                                                ]
+                                              : null,
                                         ),
-                                        boxShadow: isSelecionado
-                                            ? [
-                                                BoxShadow(
-                                                  color: CardioTheme.cyanAccent.withValues(alpha: 0.4),
-                                                  blurRadius: 14,
-                                                  spreadRadius: 2,
+                                        child: ClipOval(
+                                          child: item['asset'] != null
+                                              ? Image.asset(
+                                                  item['asset'] as String,
+                                                  width: 66,
+                                                  height: 66,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (context, error, stackTrace) => Center(
+                                                    child: Text(
+                                                      item['emoji'] as String,
+                                                      style: const TextStyle(fontSize: 30),
+                                                    ),
+                                                  ),
                                                 )
-                                              ]
-                                            : null,
-                                      ),
-                                      child: ClipOval(
-                                        child: item['asset'] != null
-                                            ? Image.asset(
-                                                item['asset'] as String,
-                                                width: 68,
-                                                height: 68,
-                                                fit: BoxFit.cover,
-                                                errorBuilder: (context, error, stackTrace) => Center(
+                                              : Center(
                                                   child: Text(
                                                     item['emoji'] as String,
-                                                    style: const TextStyle(fontSize: 32),
+                                                    style: const TextStyle(fontSize: 30),
                                                   ),
                                                 ),
-                                              )
-                                            : Center(
-                                                child: Text(
-                                                  item['emoji'] as String,
-                                                  style: const TextStyle(fontSize: 32),
-                                                ),
-                                              ),
+                                        ),
                                       ),
-                                    ),
-                                    if (isSelecionado)
-                                      Positioned(
-                                        right: -2,
-                                        bottom: -2,
-                                        child: Container(
-                                          padding: const EdgeInsets.all(3),
-                                          decoration: const BoxDecoration(
-                                            color: CardioTheme.surfaceCard,
-                                            shape: BoxShape.circle,
-                                          ),
+                                      if (isSelecionado)
+                                        Positioned(
+                                          right: -2,
+                                          bottom: -2,
                                           child: Container(
-                                            width: 20,
-                                            height: 20,
+                                            padding: const EdgeInsets.all(3),
                                             decoration: const BoxDecoration(
-                                              color: CardioTheme.cyanAccent,
+                                              color: CardioTheme.surfaceCard,
                                               shape: BoxShape.circle,
                                             ),
-                                            child: const Icon(
-                                              Icons.check,
-                                              size: 13,
-                                              color: CardioTheme.textDark,
+                                            child: Container(
+                                              width: 20,
+                                              height: 20,
+                                              decoration: const BoxDecoration(
+                                                color: CardioTheme.cyanAccent,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: const Icon(
+                                                Icons.check,
+                                                size: 13,
+                                                color: CardioTheme.textDark,
+                                              ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                                  ],
-                                ),
-                              );
-                            }),
+                                    ],
+                                  ),
+                                );
+                              }),
+                            ),
                           ),
                           const SizedBox(height: 26),
 
