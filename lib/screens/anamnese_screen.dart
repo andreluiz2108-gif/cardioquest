@@ -1,53 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../data/casos_clinicos_data.dart';
+import '../data/questionarios_data.dart';
+import '../models/caso_clinico.dart';
 import '../theme/cardio_theme.dart';
 import '../widgets/cardio_hud_card.dart';
 
 class AnamneseScreen extends StatefulWidget {
-  const AnamneseScreen({super.key});
+  final CasoClinico? caso;
+
+  const AnamneseScreen({
+    super.key,
+    this.caso,
+  });
 
   @override
   State<AnamneseScreen> createState() => _AnamneseScreenState();
 }
 
 class _AnamneseScreenState extends State<AnamneseScreen> {
+  late CasoClinico _caso;
+  late List<Map<String, dynamic>> _perguntas;
   int _perguntaAtual = 0;
 
-  final List<Map<String, dynamic>> _perguntas = [
-    {
-      'titulo': 'PASSO 1: CARACTERIZAÇÃO DA DOR',
-      'texto': 'Considerando o relato inicial do Sr. Carlos, qual característica da dor torácica é o indicativo mais clássico de Síndrome Coronariana Aguda (SCA)?',
-      'opcoes': [
-        'Dor em pontada que piora ao inspirar profundamente.',
-        'Dor precordial opressiva (em aperto) com irradiação para membro superior esquerdo e mandíbula.',
-        'Dor em queimação epigástrica que melhora imediatamente após alimentação.',
-        'Dor lombar com irradiação para face posterior dos membros inferiores.'
-      ],
-      'correta': 1,
-    },
-    {
-      'titulo': 'PASSO 2: FATORES DE RISCO CORONARIANO',
-      'texto': 'A dor é altamente sugestiva de IAM. Durante a anamnese direcionada, quais fatores de risco são cruciais investigar de imediato?',
-      'opcoes': [
-        'Histórico de asma brônquica e alergias alimentares sazonais.',
-        'Frequência de viagens internacionais recentes ou contato com infecções virais.',
-        'Hipertensão Arterial Sistêmica, Diabetes Mellitus, Tabagismo prévio e histórico familiar de DAC precoce.',
-        'Prática de esportes radicais ou traumas ortopédicos recentes.'
-      ],
-      'correta': 2,
-    },
-    {
-      'titulo': 'PASSO 3: SEGURANÇA MEDICAMENTOSA & ALERGIAS',
-      'texto': 'Você está prestes a avançar para o ECG e a terapia antiplaquetária.\n\nQual dado da anamnese é absolutamente VITAL confirmar para prevenir eventos adversos graves?',
-      'opcoes': [
-        'Tipo sanguíneo e fator Rh do paciente.',
-        'Volume da última diurese espontânea.',
-        'Histórico vacinal anual contra influenza.',
-        'Histórico de alergias medicamentosas (especialmente AAS, Dipirona ou contraste iodado).'
-      ],
-      'correta': 3,
-    }
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _caso = widget.caso ?? CasosClinicosData.casos.first;
+    _perguntas = QuestionariosData.obterPerguntasAnamnese(_caso);
+  }
 
   void _verificarResposta(int indiceEscolhido) async {
     if (indiceEscolhido == _perguntas[_perguntaAtual]['correta']) {
@@ -66,6 +47,8 @@ class _AnamneseScreenState extends State<AnamneseScreen> {
         final prefs = await SharedPreferences.getInstance();
         int xpAtual = prefs.getInt('xpEnfermeiro') ?? 0;
         await prefs.setInt('xpEnfermeiro', xpAtual + 150);
+        final casoId = widget.caso?.id ?? 'caso_1';
+        await prefs.setBool('venceu_${casoId}_mod2', true);
         await prefs.setBool('venceu_mod2', true);
 
         if (mounted) {

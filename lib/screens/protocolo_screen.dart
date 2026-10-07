@@ -1,36 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../data/casos_clinicos_data.dart';
+import '../data/questionarios_data.dart';
+import '../models/caso_clinico.dart';
 import '../theme/cardio_theme.dart';
 import '../widgets/cardio_button.dart';
 import '../widgets/cardio_hud_card.dart';
 
 class ProtocoloScreen extends StatefulWidget {
-  const ProtocoloScreen({super.key});
+  final CasoClinico? caso;
+
+  const ProtocoloScreen({
+    super.key,
+    this.caso,
+  });
 
   @override
   State<ProtocoloScreen> createState() => _ProtocoloScreenState();
 }
 
 class _ProtocoloScreenState extends State<ProtocoloScreen> {
-  final List<String> _medicamentos = [
-    "Aspirina (AAS)",
-    "Adrenalina",
-    "Oxigênio",
-    "Furosemida",
-    "Morfina",
-    "Dipirona",
-    "Nitrato",
-    "Amoxicilina"
-  ];
-
-  final List<String> _gabaritoMONA = [
-    "Morfina",
-    "Oxigênio",
-    "Nitrato",
-    "Aspirina (AAS)"
-  ];
-
+  late CasoClinico _caso;
+  late Map<String, dynamic> _dadosProtocolo;
+  late List<String> _medicamentos;
+  late List<String> _gabarito;
   final List<String> _selecionados = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _caso = widget.caso ?? CasosClinicosData.casos.first;
+    _dadosProtocolo = QuestionariosData.obterProtocoloFarmacologico(_caso);
+    _medicamentos = List<String>.from(_dadosProtocolo['medicamentos'] as List);
+    _gabarito = List<String>.from(_dadosProtocolo['gabarito'] as List);
+  }
 
   void _alternarMedicamento(String remedio) {
     setState(() {
@@ -54,12 +57,14 @@ class _ProtocoloScreenState extends State<ProtocoloScreen> {
 
   void _confirmarProtocolo() async {
     bool acertouTudo = _selecionados.length == 4 &&
-        _selecionados.every((remedio) => _gabaritoMONA.contains(remedio));
+        _selecionados.every((remedio) => _gabarito.contains(remedio));
 
     if (acertouTudo) {
       final prefs = await SharedPreferences.getInstance();
       int xpAtual = prefs.getInt('xpEnfermeiro') ?? 0;
       await prefs.setInt('xpEnfermeiro', xpAtual + 200);
+      final casoId = widget.caso?.id ?? 'caso_1';
+      await prefs.setBool('venceu_${casoId}_mod4', true);
       await prefs.setBool('venceu_mod4', true);
 
       if (mounted) {
@@ -76,12 +81,12 @@ class _ProtocoloScreenState extends State<ProtocoloScreen> {
               children: [
                 Icon(Icons.verified, color: CardioTheme.primary, size: 28),
                 SizedBox(width: 10),
-                Text('Protocolo MONA Perfeito!', style: TextStyle(color: CardioTheme.textPrimary)),
+                Text('Prescrição & Manejo Assertivo!', style: TextStyle(color: CardioTheme.textPrimary)),
               ],
             ),
-            content: const Text(
-              'Você selecionou com maestria Morfina, Oxigênio, Nitrato e Aspirina (AAS), salvando miocárdio isquêmico!\n\nVocê conquistou +200 XP!',
-              style: TextStyle(color: CardioTheme.textSecondary, fontSize: 15),
+            content: Text(
+              '${_dadosProtocolo['explicacao']}\n\nVocê conquistou +200 XP!',
+              style: const TextStyle(color: CardioTheme.textSecondary, fontSize: 14),
             ),
             actions: [
               ElevatedButton(
@@ -101,8 +106,8 @@ class _ProtocoloScreenState extends State<ProtocoloScreen> {
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Combinação incorreta. Relembre o acrônimo clássico do protocolo de dor torácica e tente novamente.'),
+        SnackBar(
+          content: Text('Combinação incorreta para o caso de ${_caso.nome}. Releia a queixa clínica e fisiopatologia.'),
           backgroundColor: CardioTheme.statusGrave,
         ),
       );
@@ -170,12 +175,16 @@ class _ProtocoloScreenState extends State<ProtocoloScreen> {
 
                 // Cartão de Instrução Clínica
                 CardioHudCard(
-                  headerTitle: 'PRESCRIÇÃO & CONDUTA IMEDIATA',
+                  headerTitle: _dadosProtocolo['titulo'] as String,
                   headerIcon: Icons.medical_services_outlined,
                   padding: const EdgeInsets.all(18),
-                  child: const Text(
-                    'O ECG confirmou IAMCSST. Selecione no dispensário abaixo exatamente as 4 intervenções farmacológicas imediatas que compõem o protocolo de emergência.',
-                    style: TextStyle(fontSize: 14, color: CardioTheme.textPrimary, height: 1.4),
+                  child: Text(
+                    _dadosProtocolo['descricao'] as String,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: CardioTheme.textSecondary,
+                      height: 1.4,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),

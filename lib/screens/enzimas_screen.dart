@@ -1,53 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../data/casos_clinicos_data.dart';
+import '../data/questionarios_data.dart';
+import '../models/caso_clinico.dart';
 import '../theme/cardio_theme.dart';
 import '../widgets/cardio_hud_card.dart';
 
 class EnzimasScreen extends StatefulWidget {
-  const EnzimasScreen({super.key});
+  final CasoClinico? caso;
+
+  const EnzimasScreen({
+    super.key,
+    this.caso,
+  });
 
   @override
   State<EnzimasScreen> createState() => _EnzimasScreenState();
 }
 
 class _EnzimasScreenState extends State<EnzimasScreen> {
+  late CasoClinico _caso;
+  late List<Map<String, dynamic>> _perguntas;
   int _perguntaAtual = 0;
 
-  final List<Map<String, dynamic>> _perguntas = [
-    {
-      'titulo': 'ETAPA 1: O BIOMARCADOR PADRÃO-OURO',
-      'texto': 'O paciente está sob monitorização contínua. Qual é o biomarcador considerado padrão-ouro (maior sensibilidade e especificidade) para confirmação de necrose miocárdica no IAM?',
-      'opcoes': [
-        'Mioglobina',
-        'CK-MB Massa',
-        'Troponina Cardíaca (I ou T de Alta Sensibilidade)',
-        'Desidrogenase Lática (LDH)'
-      ],
-      'correta': 2,
-    },
-    {
-      'titulo': 'ETAPA 2: CINÉTICA DA CURVA ENZIMÁTICA',
-      'texto': 'Você realizou a coleta de sangue venoso para dosagem de Troponina. Em relação à sua curva de liberação sérica, quando se inicia sua elevação detectável após a oclusão coronariana?',
-      'opcoes': [
-        'Imediatamente nos primeiros 10 minutos.',
-        'Entre 3 a 6 horas após o início da isquemia celular.',
-        'Apenas após 24 horas completas do evento.',
-        'Após 48 horas da dor precordial.'
-      ],
-      'correta': 1,
-    },
-    {
-      'titulo': 'ETAPA 3: MONITORIZAÇÃO DE REINFARTO',
-      'texto': 'No 4º dia pós-evento, o paciente apresenta novo episódio de dor torácica típica. A Troponina permanece elevada pela meia-vida residual (até 14 dias).\n\nQual biomarcador é o mais indicado AGORA para diagnosticar reinfarto recente?',
-      'opcoes': [
-        'Nova dosagem isolada de Troponina I.',
-        'Peptídeo Natriurético Tipo B (BNP).',
-        'D-Dímero.',
-        'CK-MB (pois retorna aos níveis basais em 48 a 72 horas).'
-      ],
-      'correta': 3,
-    }
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _caso = widget.caso ?? CasosClinicosData.casos.first;
+    _perguntas = QuestionariosData.obterPerguntasEnzimas(_caso);
+  }
 
   void _verificarResposta(int indiceEscolhido) async {
     if (indiceEscolhido == _perguntas[_perguntaAtual]['correta']) {
@@ -66,6 +47,8 @@ class _EnzimasScreenState extends State<EnzimasScreen> {
         final prefs = await SharedPreferences.getInstance();
         int xpAtual = prefs.getInt('xpEnfermeiro') ?? 0;
         await prefs.setInt('xpEnfermeiro', xpAtual + 150);
+        final casoId = widget.caso?.id ?? 'caso_1';
+        await prefs.setBool('venceu_${casoId}_mod5', true);
         await prefs.setBool('venceu_mod5', true);
 
         if (mounted) {

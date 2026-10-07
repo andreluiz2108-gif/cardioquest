@@ -4,6 +4,7 @@ import '../data/casos_clinicos_data.dart';
 import '../models/caso_clinico.dart';
 import '../theme/cardio_theme.dart';
 import '../widgets/cardio_hud_card.dart';
+import '../widgets/patient_avatar_widget.dart';
 import '../widgets/telemetry_badge.dart';
 import 'triagem_screen.dart';
 import 'anamnese_screen.dart';
@@ -34,12 +35,22 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
   bool _mod4Liberado = false;
   bool _mod5Liberado = false;
   bool _mod6Liberado = false;
+  bool _mod6Concluido = false;
 
   @override
   void initState() {
     super.initState();
     _definirCasoInicial();
     _carregarProgresso();
+  }
+
+  @override
+  void didUpdateWidget(covariant ProntuarioScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.casoInicialId != widget.casoInicialId) {
+      _definirCasoInicial();
+      _carregarProgresso();
+    }
   }
 
   void _definirCasoInicial() {
@@ -55,14 +66,16 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
 
   Future<void> _carregarProgresso() async {
     final prefs = await SharedPreferences.getInstance();
+    final casoId = _casoSelecionado.id;
     if (mounted) {
       setState(() {
-        _mod1Concluido = prefs.getBool('venceu_mod1') ?? false;
+        _mod1Concluido = prefs.getBool('venceu_${casoId}_mod1') ?? false;
         _mod2Liberado = _mod1Concluido;
-        _mod3Liberado = prefs.getBool('venceu_mod2') ?? false;
-        _mod4Liberado = prefs.getBool('venceu_mod3') ?? false;
-        _mod5Liberado = prefs.getBool('venceu_mod4') ?? false;
-        _mod6Liberado = prefs.getBool('venceu_mod5') ?? false;
+        _mod3Liberado = prefs.getBool('venceu_${casoId}_mod2') ?? false;
+        _mod4Liberado = prefs.getBool('venceu_${casoId}_mod3') ?? false;
+        _mod5Liberado = prefs.getBool('venceu_${casoId}_mod4') ?? false;
+        _mod6Liberado = prefs.getBool('venceu_${casoId}_mod5') ?? false;
+        _mod6Concluido = prefs.getBool('venceu_${casoId}_mod6') ?? false;
       });
     }
   }
@@ -71,6 +84,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
     setState(() {
       _casoSelecionado = caso;
     });
+    _carregarProgresso();
   }
 
   List<CasoClinico> _obterCasosFiltrados() {
@@ -120,7 +134,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
 
                 // 2. Carrossel Horizontal / Seletor Rápido de Pacientes
                 SizedBox(
-                  height: 84,
+                  height: 94,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: casosExibidos.length,
@@ -135,8 +149,8 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                         onTap: () => _trocarPaciente(paciente),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 180),
-                          width: 200,
-                          padding: const EdgeInsets.all(10),
+                          width: 215,
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                           decoration: BoxDecoration(
                             color: isSelected ? CardioTheme.surfaceCard : CardioTheme.surface.withValues(alpha: 0.6),
                             borderRadius: BorderRadius.circular(14),
@@ -156,17 +170,11 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                           ),
                           child: Row(
                             children: [
-                              Container(
-                                width: 42,
-                                height: 42,
-                                decoration: BoxDecoration(
-                                  color: CardioTheme.surfaceElevated,
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: statusColor, width: 1),
-                                ),
-                                child: Center(
-                                  child: Text(paciente.avatar, style: const TextStyle(fontSize: 22)),
-                                ),
+                              PatientAvatarWidget(
+                                caso: paciente,
+                                size: 52,
+                                isSelected: isSelected,
+                                showManchesterBadge: true,
                               ),
                               const SizedBox(width: 10),
                               Expanded(
@@ -216,25 +224,11 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: CardioTheme.surfaceElevated,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: _casoSelecionado.gravidade == 'GRAVE' ? CardioTheme.statusGrave : CardioTheme.statusMuitoUrgente,
-                                width: 2,
-                              ),
-                              boxShadow: CardioTheme.neonGlow(
-                                color: _casoSelecionado.gravidade == 'GRAVE' ? CardioTheme.statusGrave : CardioTheme.statusMuitoUrgente,
-                                opacity: 0.3,
-                                blur: 10,
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(_casoSelecionado.avatar, style: const TextStyle(fontSize: 32)),
-                            ),
+                          PatientAvatarWidget(
+                            caso: _casoSelecionado,
+                            size: 78,
+                            showManchesterBadge: true,
+                            isSelected: true,
                           ),
                           const SizedBox(width: 14),
                           Expanded(
@@ -424,7 +418,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                   icon: Icons.filter_alt_outlined,
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const TriagemScreen()),
+                    MaterialPageRoute(builder: (context) => TriagemScreen(caso: _casoSelecionado)),
                   ).then((_) => _carregarProgresso()),
                 ),
 
@@ -439,7 +433,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                   icon: Icons.history_edu_outlined,
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const AnamneseScreen()),
+                    MaterialPageRoute(builder: (context) => AnamneseScreen(caso: _casoSelecionado)),
                   ).then((_) => _carregarProgresso()),
                 ),
 
@@ -454,14 +448,14 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                   icon: Icons.monitor_heart_outlined,
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const EcgScreen()),
+                    MaterialPageRoute(builder: (context) => EcgScreen(caso: _casoSelecionado)),
                   ).then((_) => _carregarProgresso()),
                 ),
 
                 // Módulo 4: Protocolo MONA
                 _buildModuloTile(
                   numero: '4',
-                  titulo: 'Protocolo Farmacológico (MONA)',
+                  titulo: 'Protocolo Farmacológico (${_casoSelecionado.id == 'caso_3' ? 'Anti-inflamatório' : _casoSelecionado.id == 'caso_4' ? 'Diurético/VNI' : 'Antiagregação'})',
                   descricao: 'Selecione e administre as medicações imediatas indicadas.',
                   xp: '+200 XP',
                   isLiberado: _mod4Liberado,
@@ -469,14 +463,14 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                   icon: Icons.medication_outlined,
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const ProtocoloScreen()),
+                    MaterialPageRoute(builder: (context) => ProtocoloScreen(caso: _casoSelecionado)),
                   ).then((_) => _carregarProgresso()),
                 ),
 
                 // Módulo 5: Enzimas Cardíacas
                 _buildModuloTile(
                   numero: '5',
-                  titulo: 'Enzimas Cardíacas',
+                  titulo: 'Enzimas & Biomarcadores',
                   descricao: 'Laboratório: ${_casoSelecionado.enzimasResumo}.',
                   xp: '+150 XP',
                   isLiberado: _mod5Liberado,
@@ -484,7 +478,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                   icon: Icons.biotech_outlined,
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const EnzimasScreen()),
+                    MaterialPageRoute(builder: (context) => EnzimasScreen(caso: _casoSelecionado)),
                   ).then((_) => _carregarProgresso()),
                 ),
 
@@ -495,11 +489,11 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                   descricao: 'Encaminhamento adequado e plano de orientação em saúde.',
                   xp: '+150 XP',
                   isLiberado: _mod6Liberado,
-                  isConcluido: false,
+                  isConcluido: _mod6Concluido,
                   icon: Icons.check_circle_outline,
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const AltaScreen()),
+                    MaterialPageRoute(builder: (context) => AltaScreen(caso: _casoSelecionado)),
                   ).then((_) => _carregarProgresso()),
                 ),
                 const SizedBox(height: 16),

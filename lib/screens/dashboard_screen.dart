@@ -5,6 +5,7 @@ import '../models/caso_clinico.dart';
 import '../theme/cardio_theme.dart';
 import '../widgets/cardio_button.dart';
 import '../widgets/cardio_hud_card.dart';
+import '../widgets/patient_avatar_widget.dart';
 import '../widgets/telemetry_badge.dart';
 import 'prontuario_screen.dart';
 import 'trofeus_screen.dart';
@@ -13,11 +14,13 @@ import 'welcome_screen.dart';
 class DashboardScreen extends StatefulWidget {
   final String nomeEnfermeiro;
   final String avatar;
+  final String? avatarAsset;
 
   const DashboardScreen({
     super.key,
     required this.nomeEnfermeiro,
     required this.avatar,
+    this.avatarAsset,
   });
 
   @override
@@ -50,12 +53,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
     int xp = prefs.getInt('xpEnfermeiro') ?? 0;
     String cargo = prefs.getString('cargoEnfermeiro') ?? 'Enfermeiro(a) de Plantão';
     int concluidos = 0;
-    if (prefs.getBool('venceu_mod1') == true) concluidos++;
-    if (prefs.getBool('venceu_mod2') == true) concluidos++;
-    if (prefs.getBool('venceu_mod3') == true) concluidos++;
-    if (prefs.getBool('venceu_mod4') == true) concluidos++;
-    if (prefs.getBool('venceu_mod5') == true) concluidos++;
-    if (prefs.getBool('venceu_mod6') == true) concluidos++;
+    for (var c in CasosClinicosData.casos) {
+      for (int m = 1; m <= 6; m++) {
+        if (prefs.getBool('venceu_${c.id}_mod$m') == true) {
+          concluidos++;
+        }
+      }
+    }
+    if (concluidos == 0) {
+      if (prefs.getBool('venceu_mod1') == true) concluidos++;
+      if (prefs.getBool('venceu_mod2') == true) concluidos++;
+      if (prefs.getBool('venceu_mod3') == true) concluidos++;
+      if (prefs.getBool('venceu_mod4') == true) concluidos++;
+      if (prefs.getBool('venceu_mod5') == true) concluidos++;
+      if (prefs.getBool('venceu_mod6') == true) concluidos++;
+    }
 
     if (mounted) {
       setState(() {
@@ -203,16 +215,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Row(
                         children: [
                           Container(
-                            width: 64,
-                            height: 64,
+                            width: 76,
+                            height: 76,
                             decoration: BoxDecoration(
                               color: CardioTheme.surfaceElevated,
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(18),
                               border: Border.all(color: CardioTheme.primary, width: 2),
-                              boxShadow: CardioTheme.neonGlow(opacity: 0.3, blur: 10),
+                              boxShadow: CardioTheme.neonGlow(opacity: 0.35, blur: 12),
                             ),
-                            child: Center(
-                              child: Text(widget.avatar, style: const TextStyle(fontSize: 34)),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: (widget.avatarAsset != null && widget.avatarAsset!.isNotEmpty)
+                                  ? Image.asset(
+                                      widget.avatarAsset!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) => Center(
+                                        child: Text(widget.avatar, style: const TextStyle(fontSize: 40)),
+                                      ),
+                                    )
+                                  : Center(
+                                      child: Text(widget.avatar, style: const TextStyle(fontSize: 40)),
+                                    ),
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -495,19 +518,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
               children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: CardioTheme.surfaceElevated,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: statusColor, width: 1),
-                  ),
-                  child: Center(
-                    child: Text(caso.avatar, style: const TextStyle(fontSize: 22)),
-                  ),
+                PatientAvatarWidget(
+                  caso: caso,
+                  size: 56,
+                  showManchesterBadge: true,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

@@ -16,10 +16,10 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  // Abre a gaveta e procura pelas etiquetas
   final prefs = await SharedPreferences.getInstance();
   final String? nomeSalvo = prefs.getString('nomeEnfermeiro');
   final String? avatarSalvo = prefs.getString('avatarEnfermeiro');
+  final String? avatarAssetSalvo = prefs.getString('avatarAssetEnfermeiro');
 
   // Lógica inteligente: Qual tela mostrar primeiro?
   Widget telaInicial = const WelcomeScreen(); // Por padrão, tela de identificação
@@ -29,6 +29,7 @@ void main() async {
     telaInicial = DashboardScreen(
       nomeEnfermeiro: nomeSalvo,
       avatar: avatarSalvo,
+      avatarAsset: avatarAssetSalvo,
     );
   }
 

@@ -1,24 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../data/casos_clinicos_data.dart';
+import '../data/questionarios_data.dart';
+import '../models/caso_clinico.dart';
 import '../theme/cardio_theme.dart';
 import '../widgets/cardio_hud_card.dart';
 
 class AltaScreen extends StatefulWidget {
-  const AltaScreen({super.key});
+  final CasoClinico? caso;
+
+  const AltaScreen({
+    super.key,
+    this.caso,
+  });
 
   @override
   State<AltaScreen> createState() => _AltaScreenState();
 }
 
 class _AltaScreenState extends State<AltaScreen> {
-  final List<Map<String, dynamic>> _habitos = [
-    {"texto": "Caminhada leve progressiva (30 min/dia) após liberação da cardiologia", "bom": true},
-    {"texto": "Substituir o cigarro tradicional por dispositivo eletrônico (Vape/Pod)", "bom": false},
-    {"texto": "Dieta rica em sódio e ultraprocessados para repor eletrólitos rapidamente", "bom": false},
-    {"texto": "Adesão rigorosa e contínua à dupla antiagregação e estatina prescrita", "bom": true},
-  ];
-
+  late CasoClinico _caso;
+  late List<Map<String, dynamic>> _habitos;
   int _indiceAtual = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _caso = widget.caso ?? CasosClinicosData.casos.first;
+    _habitos = QuestionariosData.obterPerguntasAlta(_caso);
+  }
 
   void _julgarHabito(bool recomendou) async {
     bool habitoRealmenteBom = _habitos[_indiceAtual]["bom"];
@@ -32,6 +42,8 @@ class _AltaScreenState extends State<AltaScreen> {
         final prefs = await SharedPreferences.getInstance();
         int xpAtual = prefs.getInt('xpEnfermeiro') ?? 0;
         await prefs.setInt('xpEnfermeiro', xpAtual + 200);
+        final casoId = widget.caso?.id ?? 'caso_1';
+        await prefs.setBool('venceu_${casoId}_mod6', true);
         await prefs.setBool('venceu_mod6', true);
 
         if (mounted) {
@@ -51,9 +63,9 @@ class _AltaScreenState extends State<AltaScreen> {
                   Text('Caso Clínico Concluído!', style: TextStyle(color: CardioTheme.textPrimary)),
                 ],
               ),
-              content: const Text(
-                'Parabéns! Você conduziu todas as 6 etapas do atendimento ao Sr. Carlos com excelência técnica e salvou o miocárdio do paciente!\n\nVocê conquistou +200 XP e finalizou o plantão!',
-                style: TextStyle(color: CardioTheme.textSecondary, fontSize: 15),
+              content: Text(
+                'Parabéns! Você conduziu todas as 6 etapas do atendimento de ${_caso.nome} com excelência técnica e rigor clínico!\n\nVocê conquistou +200 XP e finalizou este atendimento!',
+                style: const TextStyle(color: CardioTheme.textSecondary, fontSize: 15),
               ),
               actions: [
                 ElevatedButton(

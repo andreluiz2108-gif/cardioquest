@@ -1,57 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../data/casos_clinicos_data.dart';
+import '../data/questionarios_data.dart';
+import '../models/caso_clinico.dart';
 import '../theme/cardio_theme.dart';
 import '../widgets/cardio_hud_card.dart';
 
 class TriagemScreen extends StatefulWidget {
-  const TriagemScreen({super.key});
+  final CasoClinico? caso;
+
+  const TriagemScreen({
+    super.key,
+    this.caso,
+  });
 
   @override
   State<TriagemScreen> createState() => _TriagemScreenState();
 }
 
 class _TriagemScreenState extends State<TriagemScreen> {
+  late CasoClinico _caso;
+  late List<Map<String, dynamic>> _perguntas;
   int _perguntaAtual = 0;
 
-  final List<Map<String, dynamic>> _perguntas = [
-    {
-      'titulo': 'ETAPA 1: CLASSIFICAÇÃO DE RISCO',
-      'texto': 'Paciente relata dor no peito (nível 9/10) tipo aperto, iniciada há 40 minutos com irradiação para mandíbula e MSE, palidez e sudorese fria.\n\nQual a classificação de risco pelo Protocolo de Manchester?',
-      'opcoes': [
-        'Emergência (0 min) - Vermelho',
-        'Muito Urgente (10 min) - Laranja',
-        'Urgente (60 min) - Amarelo',
-        'Pouco Urgente (120 min) - Verde',
-        'Não Urgente (240 min) - Azul'
-      ],
-      'correta': 0,
-      'usarCores': true,
-    },
-    {
-      'titulo': 'ETAPA 2: CONDUTA IMEDIATA',
-      'texto': 'Classificação Vermelha (Emergência) confirmada!\n\nQual deve ser a sua PRIMEIRA ação de enfermagem?',
-      'opcoes': [
-        'Pedir ao paciente para aguardar sentado na recepção.',
-        'Encaminhar para a sala de emergência e solicitar ECG em até 10 minutos.',
-        'Aferir apenas a temperatura e dar um analgésico simples.',
-        'Preencher o registro de admissão completo antes de chamar o médico.'
-      ],
-      'correta': 1,
-      'usarCores': false,
-    },
-    {
-      'titulo': 'ETAPA 3: MONITORIZAÇÃO CONTÍNUA',
-      'texto': 'O paciente está na sala de emergência aguardando a realização do ECG.\n\nAlém do traçado eletrocardiográfico, qual a monitorização prioritária?',
-      'opcoes': [
-        'Apenas frequência cardíaca.',
-        'Medição da glicemia capilar isolada.',
-        'Monitorização contínua (Sinais Vitais, Oximetria e Acesso Venoso Calibroso).',
-        'Apenas a pressão arterial a cada 30 minutos.'
-      ],
-      'correta': 2,
-      'usarCores': false,
-    }
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _caso = widget.caso ?? CasosClinicosData.casos.first;
+    _perguntas = QuestionariosData.obterPerguntasTriagem(_caso);
+  }
 
   void _verificarResposta(int indiceEscolhido) async {
     if (indiceEscolhido == _perguntas[_perguntaAtual]['correta']) {
@@ -70,6 +47,8 @@ class _TriagemScreenState extends State<TriagemScreen> {
         final prefs = await SharedPreferences.getInstance();
         int xpAtual = prefs.getInt('xpEnfermeiro') ?? 0;
         await prefs.setInt('xpEnfermeiro', xpAtual + 150);
+        final casoId = widget.caso?.id ?? 'caso_1';
+        await prefs.setBool('venceu_${casoId}_mod1', true);
         await prefs.setBool('venceu_mod1', true);
 
         if (mounted) {
@@ -90,7 +69,7 @@ class _TriagemScreenState extends State<TriagemScreen> {
                 ],
               ),
               content: const Text(
-                'Excelente raciocínio clínico! O paciente foi classificado na Sala Vermelha e monitorizado dentro do tempo hábil.\n\nVocê conquistou +150 XP!',
+                'Excelente raciocínio clínico! O paciente foi classificado e monitorizado dentro do tempo hábil.\n\nVocê conquistou +150 XP!',
                 style: TextStyle(color: CardioTheme.textSecondary, fontSize: 15),
               ),
               actions: [

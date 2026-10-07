@@ -23,7 +23,7 @@ class _TrofeusScreenState extends State<TrofeusScreen> {
     {
       'id': 1,
       'titulo': 'Olho Clínico de Triagem',
-      'subtitulo': 'Classificação de risco precisa pelo Protocolo Manchester',
+      'subtitulo': 'Classificação de risco precisa pelo Protocolo Manchester na Sala Vermelha',
       'competencia': 'Módulo 1 • Sala Vermelha',
       'xp': '+150 XP',
       'icone': Icons.filter_alt_outlined,
@@ -41,7 +41,7 @@ class _TrofeusScreenState extends State<TrofeusScreen> {
     {
       'id': 3,
       'titulo': 'Águia do ECG',
-      'subtitulo': 'Identificação do IAM com Supra de ST em menos de 10 minutos',
+      'subtitulo': 'Identificação do IAM com Supra de ST e arritmias em < 10 minutos',
       'competencia': 'Módulo 3 • Telemetria 12D',
       'xp': '+200 XP',
       'icone': Icons.monitor_heart_outlined,
@@ -49,8 +49,8 @@ class _TrofeusScreenState extends State<TrofeusScreen> {
     },
     {
       'id': 4,
-      'titulo': 'Mestre do Protocolo MONA',
-      'subtitulo': 'Prescrição farmacológica assertiva para alívio e reperfusão',
+      'titulo': 'Mestre do Protocolo Farmacológico',
+      'subtitulo': 'Prescrição assertiva de MONA, antiagregantes e diuréticos de urgência',
       'competencia': 'Módulo 4 • Farmacologia',
       'xp': '+200 XP',
       'icone': Icons.medication_outlined,
@@ -59,7 +59,7 @@ class _TrofeusScreenState extends State<TrofeusScreen> {
     {
       'id': 5,
       'titulo': 'Bioquímica Cardíaca',
-      'subtitulo': 'Interpretação da curva de Troponina e vigilância de reinfarto',
+      'subtitulo': 'Interpretação da curva de Troponina, CK-MB e vigilância de reinfarto',
       'competencia': 'Módulo 5 • Biomarcadores',
       'xp': '+150 XP',
       'icone': Icons.biotech_outlined,
@@ -68,11 +68,83 @@ class _TrofeusScreenState extends State<TrofeusScreen> {
     {
       'id': 6,
       'titulo': 'Alta & Reabilitação Segura',
-      'subtitulo': 'Educação em saúde para prevenção de novos eventos isquêmicos',
+      'subtitulo': 'Educação em saúde para prevenção secundária de novos eventos isquêmicos',
       'competencia': 'Módulo 6 • Desfecho Clínico',
       'xp': '+200 XP',
       'icone': Icons.health_and_safety_outlined,
       'cor': CardioTheme.secondary,
+    },
+    {
+      'id': 7,
+      'titulo': 'Sentinela do Equivalente Isquêmico',
+      'subtitulo': 'Reconhecimento de dor atípica e IAM sem supra em mulher diabética (Dona Maria)',
+      'competencia': 'Desafio Especial • IAMSSST',
+      'xp': '+250 XP',
+      'icone': Icons.female_outlined,
+      'cor': Colors.pinkAccent,
+    },
+    {
+      'id': 8,
+      'titulo': 'Guardião da Miopericardite',
+      'subtitulo': 'Diferenciação precisa entre pericardite aguda com supra côncavo e IAM em jovem (Lucas)',
+      'competencia': 'Desafio Especial • Pericárdio',
+      'xp': '+250 XP',
+      'icone': Icons.shield_outlined,
+      'cor': Colors.tealAccent,
+    },
+    {
+      'id': 9,
+      'titulo': 'Comandante da Sala Vermelha',
+      'subtitulo': 'Manejo rápido e sincronizado do Edema Agudo de Pulmão hipertensivo (Dona Helena)',
+      'competencia': 'Desafio Especial • EAP & VNI',
+      'xp': '+300 XP',
+      'icone': Icons.air_outlined,
+      'cor': CardioTheme.statusGrave,
+    },
+    {
+      'id': 10,
+      'titulo': 'Agilidade Porta-Balão',
+      'subtitulo': 'Tomada de decisão clínica ágil acumulando mais de 400 XP de plantão',
+      'competencia': 'Métrica de Tempo • Reperfusão',
+      'xp': '+200 XP',
+      'icone': Icons.speed_outlined,
+      'cor': CardioTheme.statusUrgente,
+    },
+    {
+      'id': 11,
+      'titulo': 'Especialista Multileitos',
+      'subtitulo': 'Atendimento completo prestado a múltiplos pacientes no mesmo turno',
+      'competencia': 'Gestão de Leitos • CTI',
+      'xp': '+200 XP',
+      'icone': Icons.hotel_outlined,
+      'cor': CardioTheme.cyanAccent,
+    },
+    {
+      'id': 12,
+      'titulo': 'Farmacologia Sem Erros',
+      'subtitulo': 'Condução terapêutica impecável sem interações prejudiciais',
+      'competencia': 'Segurança do Paciente',
+      'xp': '+150 XP',
+      'icone': Icons.verified_user_outlined,
+      'cor': CardioTheme.primary,
+    },
+    {
+      'id': 13,
+      'titulo': 'Guardião da Telemetria Crítica',
+      'subtitulo': 'Reconhecimento instantâneo de ritmos chocáveis (FV/TV) e instabilidade',
+      'competencia': 'Suporte Avançado • ACLS',
+      'xp': '+200 XP',
+      'icone': Icons.electric_bolt_outlined,
+      'cor': Colors.amberAccent,
+    },
+    {
+      'id': 14,
+      'titulo': 'Estrela Dourada do Plantão',
+      'subtitulo': 'Maestria absoluta em cardiologia de urgência com mais de 800 XP conquistados',
+      'competencia': 'Grau Máximo • Excelência',
+      'xp': '+500 XP',
+      'icone': Icons.star_rounded,
+      'cor': Colors.amber,
     },
   ];
 
@@ -111,6 +183,22 @@ class _TrofeusScreenState extends State<TrofeusScreen> {
         return _temMedalha5;
       case 5:
         return _temMedalha6;
+      case 6:
+        return _temMedalha1 && _temMedalha2;
+      case 7:
+        return _temMedalha3 && _temMedalha4;
+      case 8:
+        return _temMedalha1 && _temMedalha4;
+      case 9:
+        return _xpTotal >= 400;
+      case 10:
+        return _temMedalha5 || _temMedalha6;
+      case 11:
+        return _temMedalha4;
+      case 12:
+        return _temMedalha3;
+      case 13:
+        return _xpTotal >= 800 && _temMedalha6;
       default:
         return false;
     }
@@ -118,14 +206,7 @@ class _TrofeusScreenState extends State<TrofeusScreen> {
 
   @override
   Widget build(BuildContext context) {
-    int totalDesbloqueadas = [
-      _temMedalha1,
-      _temMedalha2,
-      _temMedalha3,
-      _temMedalha4,
-      _temMedalha5,
-      _temMedalha6
-    ].where((m) => m).length;
+    int totalDesbloqueadas = List.generate(_listaTrofeus.length, (i) => _isDesbloqueado(i)).where((m) => m).length;
 
     return Scaffold(
       backgroundColor: CardioTheme.background,
@@ -181,7 +262,7 @@ class _TrofeusScreenState extends State<TrofeusScreen> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  '$totalDesbloqueadas DE 6 CONQUISTAS DESBLOQUEADAS',
+                                  '$totalDesbloqueadas DE ${_listaTrofeus.length} CONQUISTAS DESBLOQUEADAS',
                                   style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.bold,
@@ -213,7 +294,7 @@ class _TrofeusScreenState extends State<TrofeusScreen> {
                       ClipRRect(
                         borderRadius: BorderRadius.circular(4),
                         child: LinearProgressIndicator(
-                          value: totalDesbloqueadas / 6.0,
+                          value: totalDesbloqueadas / _listaTrofeus.length.toDouble(),
                           minHeight: 6,
                           backgroundColor: CardioTheme.surfaceElevated,
                           valueColor: const AlwaysStoppedAnimation<Color>(CardioTheme.primary),

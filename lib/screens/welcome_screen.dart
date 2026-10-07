@@ -16,49 +16,27 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   String _nomeEnfermeiro = '';
   int _avatarSelecionado = 0;
 
-  // Lista de Avatares Clínicos Especializados e Bem Diferenciados
+  // Lista de Avatares Clínicos (Apenas Imagens)
   final List<Map<String, dynamic>> _avataresProfissionais = [
     {
-      'emoji': '🩺',
-      'papel': 'Enf. Emergência',
-      'especialidade': 'Sala Vermelha',
-      'cor': CardioTheme.statusGrave,
-      'icone': Icons.local_hospital,
-    },
-    {
-      'emoji': '🫀',
-      'papel': 'Especialista Cardio',
-      'especialidade': 'Hemodinâmica',
+      'emoji': '👨‍⚕️',
+      'asset': 'assets/avatars/avatar_andre.jpg',
       'cor': CardioTheme.primary,
-      'icone': Icons.monitor_heart,
     },
     {
-      'emoji': '⚡',
-      'papel': 'Intensivista',
-      'especialidade': 'CTI Cardiológico',
+      'emoji': '👩‍⚕️',
+      'asset': 'assets/avatars/avatar_anapaula.jpg',
       'cor': CardioTheme.cyanAccent,
-      'icone': Icons.bolt,
     },
     {
-      'emoji': '🚑',
-      'papel': 'Socorrista',
-      'especialidade': 'Resgate / SAMU',
+      'emoji': '👨‍⚕️',
+      'asset': 'assets/avatars/avatar_roberto.jpg',
+      'cor': CardioTheme.statusGrave,
+    },
+    {
+      'emoji': '👩‍⚕️',
+      'asset': 'assets/avatars/avatar_doctor.jpg',
       'cor': CardioTheme.statusMuitoUrgente,
-      'icone': Icons.emergency,
-    },
-    {
-      'emoji': '🧬',
-      'papel': 'Bioquímico(a)',
-      'especialidade': 'Laboratório / Biomarcadores',
-      'cor': Colors.purpleAccent,
-      'icone': Icons.science,
-    },
-    {
-      'emoji': '👔',
-      'papel': 'Chefe de Plantão',
-      'especialidade': 'Coordenação Clínica',
-      'cor': CardioTheme.statusUrgente,
-      'icone': Icons.admin_panel_settings,
     },
   ];
 
@@ -84,11 +62,15 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
     final avatarData = _avataresProfissionais[_avatarSelecionado];
     final avatarEmoji = avatarData['emoji'] as String;
+    final avatarAsset = avatarData['asset'] as String?;
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('nomeEnfermeiro', nome);
     await prefs.setString('avatarEnfermeiro', avatarEmoji);
-    await prefs.setString('cargoEnfermeiro', avatarData['papel'] as String);
+    if (avatarAsset != null) {
+      await prefs.setString('avatarAssetEnfermeiro', avatarAsset);
+    }
+    await prefs.setString('cargoEnfermeiro', 'Enfermeiro(a) de Plantão');
 
     if (mounted) {
       Navigator.pushReplacement(
@@ -97,6 +79,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           builder: (context) => DashboardScreen(
             nomeEnfermeiro: nome,
             avatar: avatarEmoji,
+            avatarAsset: avatarAsset,
           ),
         ),
       );
@@ -172,7 +155,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'NOME DO PROFISSIONAL',
+                            'SEU NOME NO CRACHÁ',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -186,7 +169,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             style: const TextStyle(color: CardioTheme.textPrimary, fontWeight: FontWeight.w600),
                             onChanged: (valor) => setState(() => _nomeEnfermeiro = valor),
                             decoration: InputDecoration(
-                              hintText: 'Digite seu nome para o crachá...',
+                              hintText: 'Digite seu nome para o crachá do plantão...',
                               hintStyle: const TextStyle(color: CardioTheme.textMuted, fontSize: 14),
                               prefixIcon: const Icon(Icons.person_outline, color: CardioTheme.primary),
                               filled: true,
@@ -205,7 +188,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           const SizedBox(height: 22),
 
                           const Text(
-                            'SELECIONE SUA ESPECIALIDADE / AVATAR NO PLANTÃO',
+                            'SELECIONE SEU AVATAR',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -213,85 +196,94 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               color: CardioTheme.textMuted,
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 14),
 
-                          // Grid de Avatares Clínicos Diferenciados
-                          GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 3,
-                              childAspectRatio: 1.4,
-                              crossAxisSpacing: 10,
-                              mainAxisSpacing: 10,
-                            ),
-                            itemCount: _avataresProfissionais.length,
-                            itemBuilder: (context, index) {
+                          // Fileira de Imagens dos Avatares (Sem textos ou títulos)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: List.generate(_avataresProfissionais.length, (index) {
                               final item = _avataresProfissionais[index];
                               final isSelecionado = _avatarSelecionado == index;
-                              final Color corItem = item['cor'] as Color;
+                              final Color corItem = isSelecionado ? CardioTheme.cyanAccent : CardioTheme.borderSubtle;
 
                               return GestureDetector(
                                 onTap: () => setState(() => _avatarSelecionado = index),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 180),
-                                  decoration: BoxDecoration(
-                                    color: isSelecionado
-                                        ? corItem.withValues(alpha: 0.15)
-                                        : CardioTheme.surface,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: isSelecionado ? corItem : CardioTheme.borderSubtle,
-                                      width: isSelecionado ? 2.0 : 1.0,
-                                    ),
-                                    boxShadow: isSelecionado
-                                        ? [
-                                            BoxShadow(
-                                              color: corItem.withValues(alpha: 0.35),
-                                              blurRadius: 10,
-                                              spreadRadius: 0,
-                                            )
-                                          ]
-                                        : null,
-                                  ),
-                                  padding: const EdgeInsets.all(8),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            item['emoji'] as String,
-                                            style: const TextStyle(fontSize: 22),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Icon(
-                                            item['icone'] as IconData,
-                                            size: 14,
-                                            color: isSelecionado ? corItem : CardioTheme.textMuted,
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        item['papel'] as String,
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: isSelecionado ? corItem : CardioTheme.textPrimary,
+                                child: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    AnimatedContainer(
+                                      duration: const Duration(milliseconds: 200),
+                                      width: 68,
+                                      height: 68,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: corItem,
+                                          width: isSelecionado ? 2.8 : 1.5,
                                         ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        textAlign: TextAlign.center,
+                                        boxShadow: isSelecionado
+                                            ? [
+                                                BoxShadow(
+                                                  color: CardioTheme.cyanAccent.withValues(alpha: 0.4),
+                                                  blurRadius: 14,
+                                                  spreadRadius: 2,
+                                                )
+                                              ]
+                                            : null,
                                       ),
-                                    ],
-                                  ),
+                                      child: ClipOval(
+                                        child: item['asset'] != null
+                                            ? Image.asset(
+                                                item['asset'] as String,
+                                                width: 68,
+                                                height: 68,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (context, error, stackTrace) => Center(
+                                                  child: Text(
+                                                    item['emoji'] as String,
+                                                    style: const TextStyle(fontSize: 32),
+                                                  ),
+                                                ),
+                                              )
+                                            : Center(
+                                                child: Text(
+                                                  item['emoji'] as String,
+                                                  style: const TextStyle(fontSize: 32),
+                                                ),
+                                              ),
+                                      ),
+                                    ),
+                                    if (isSelecionado)
+                                      Positioned(
+                                        right: -2,
+                                        bottom: -2,
+                                        child: Container(
+                                          padding: const EdgeInsets.all(3),
+                                          decoration: const BoxDecoration(
+                                            color: CardioTheme.surfaceCard,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Container(
+                                            width: 20,
+                                            height: 20,
+                                            decoration: const BoxDecoration(
+                                              color: CardioTheme.cyanAccent,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(
+                                              Icons.check,
+                                              size: 13,
+                                              color: CardioTheme.textDark,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
                                 ),
                               );
-                            },
+                            }),
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 26),
 
                           // Botão Bater Ponto & Assumir Plantão
                           CardioButton(

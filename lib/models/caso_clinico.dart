@@ -10,6 +10,7 @@ class CasoClinico {
   final String classificacaoManchester; // Vermelho, Laranja, Amarelo, Verde, Azul
   final int tempoMinutos;
   final String avatar;
+  final String? avatarAsset;
   final String medicoResponsavel;
   final String queixaPrincipal;
   final String evolucaoClinica;
@@ -35,6 +36,7 @@ class CasoClinico {
     required this.classificacaoManchester,
     required this.tempoMinutos,
     required this.avatar,
+    this.avatarAsset,
     required this.medicoResponsavel,
     required this.queixaPrincipal,
     required this.evolucaoClinica,

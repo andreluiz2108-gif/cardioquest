@@ -1,60 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../data/casos_clinicos_data.dart';
+import '../data/questionarios_data.dart';
+import '../models/caso_clinico.dart';
 import '../theme/cardio_theme.dart';
 import '../widgets/cardio_hud_card.dart';
 
 class EcgScreen extends StatefulWidget {
-  const EcgScreen({super.key});
+  final CasoClinico? caso;
+
+  const EcgScreen({
+    super.key,
+    this.caso,
+  });
 
   @override
   State<EcgScreen> createState() => _EcgScreenState();
 }
 
 class _EcgScreenState extends State<EcgScreen> {
+  late CasoClinico _caso;
+  late List<Map<String, dynamic>> _perguntas;
   int _perguntaAtual = 0;
 
-  final List<Map<String, dynamic>> _perguntas = [
-    {
-      'titulo': 'CALIBRAÇÃO & LEITURA 1',
-      'texto': 'Antes de avaliar o Sr. Carlos, o preceptor solicita a identificação deste traçado no monitor de triagem:',
-      'opcoes': [
-        'Ritmo Sinusal Normal',
-        'Fibrilação Ventricular (FV)',
-        'Assistolia / Linha Reta'
-      ],
-      'correta': 0,
-      'tipoTracado': 1,
-      'alerta': 'HR: 75 BPM • SINUSAL',
-      'corAlerta': CardioTheme.primary,
-    },
-    {
-      'titulo': 'EMERGÊNCIA NO LEITO ADJACENTE',
-      'texto': 'O alarme do desfibrilador disparou! Identifique este ritmo caótico de parada cardiorrespiratória:',
-      'opcoes': [
-        'Bradicardia Sinusal',
-        'Fibrilação Ventricular (Ritmo Chocável)',
-        'Bloqueio Atrioventricular Total'
-      ],
-      'correta': 1,
-      'tipoTracado': 2,
-      'alerta': 'HR: --- • ALARME CRÍTICO',
-      'corAlerta': CardioTheme.statusGrave,
-    },
-    {
-      'titulo': 'ECG 12 DERIVAÇÕES • SR. CARLOS MENDES',
-      'texto': 'Derivação V2 realizada em < 10 min de admissão. A dor torácica persiste intensa. Qual o diagnóstico eletrocardiográfico?',
-      'opcoes': [
-        'Ritmo Sinusal Normal',
-        'Fibrilação Ventricular',
-        'IAM com Supradesnivelamento do Segmento ST (IAMCSST)',
-        'Taquicardia Supraventricular Paroxística'
-      ],
-      'correta': 2,
-      'tipoTracado': 3,
-      'alerta': 'HR: 118 BPM • SUPRA ST PAREDE ANTERIOR',
-      'corAlerta': CardioTheme.statusGrave,
-    }
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _caso = widget.caso ?? CasosClinicosData.casos.first;
+    _perguntas = QuestionariosData.obterPerguntasEcg(_caso);
+  }
 
   void _verificarDiagnostico(int indiceEscolhido) async {
     if (indiceEscolhido == _perguntas[_perguntaAtual]['correta']) {
@@ -73,6 +47,8 @@ class _EcgScreenState extends State<EcgScreen> {
         final prefs = await SharedPreferences.getInstance();
         int xpAtual = prefs.getInt('xpEnfermeiro') ?? 0;
         await prefs.setInt('xpEnfermeiro', xpAtual + 200);
+        final casoId = widget.caso?.id ?? 'caso_1';
+        await prefs.setBool('venceu_${casoId}_mod3', true);
         await prefs.setBool('venceu_mod3', true);
 
         if (mounted) {
@@ -93,7 +69,7 @@ class _EcgScreenState extends State<EcgScreen> {
                 ],
               ),
               content: const Text(
-                'Diagnóstico de IAM com Supra de ST confirmado em tempo recorde (< 10 min)!\n\nVocê conquistou +200 XP!',
+                'Excelente raciocínio eletrocardiográfico e interpretação de derivações!\n\nVocê conquistou +200 XP!',
                 style: TextStyle(color: CardioTheme.textSecondary, fontSize: 15),
               ),
               actions: [
