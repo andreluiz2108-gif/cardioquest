@@ -24,6 +24,8 @@ class CasoClinico {
   final bool spo2Critica;
   final String ecgResumo;
   final String enzimasResumo;
+  final String dificuldade; // FÁCIL, MÉDIO, DIFÍCIL
+  final int nivel; // 1, 2, 3
 
   const CasoClinico({
     required this.id,
@@ -50,5 +52,7 @@ class CasoClinico {
     this.spo2Critica = false,
     required this.ecgResumo,
     required this.enzimasResumo,
+    this.dificuldade = 'FÁCIL',
+    this.nivel = 1,
   });
 }

@@ -31,6 +31,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _xpAtual = 0;
   int _modulosCompletos = 0;
   String _cargoEnfermeiro = 'Enfermeiro(a) de Plantão';
+  SharedPreferences? _prefs;
 
   final List<Map<String, dynamic>> _niveis = [
     {'nome': 'Estudante Calouro', 'minXp': 0, 'cor': Colors.grey},
@@ -55,7 +56,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     int concluidos = 0;
     for (var c in CasosClinicosData.casos) {
       for (int m = 1; m <= 6; m++) {
-        if (prefs.getBool('venceu_${c.id}_mod$m') == true) {
+        if (CasosClinicosData.isModuloConcluido(c.id, m, prefs)) {
           concluidos++;
         }
       }
@@ -71,6 +72,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     if (mounted) {
       setState(() {
+        _prefs = prefs;
         _xpAtual = xp;
         _modulosCompletos = concluidos;
         _cargoEnfermeiro = cargo;
@@ -141,6 +143,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _abrirProntuario(String casoId) {
+    final desbloqueado = _prefs == null ? (casoId == 'caso_1') : CasosClinicosData.isCasoDesbloqueado(casoId, _prefs!);
+    if (!desbloqueado) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.lock_outline, color: Colors.white, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  CasosClinicosData.obterMensagemBloqueio(casoId),
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: CardioTheme.statusGrave,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -350,7 +376,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: CardioTheme.textPrimary),
                                   ),
                                   Text(
-                                    '4 Leitos Disponíveis',
+                                    '3 Níveis de Dificuldade',
                                     style: TextStyle(fontSize: 10, color: CardioTheme.textMuted),
                                   ),
                                 ],
@@ -458,7 +484,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'PACIENTES EM ATENDIMENTO NO PLANTÃO (4)',
+                      'PACIENTES EM ATENDIMENTO NO PLANTÃO (3)',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
@@ -499,15 +525,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildPacienteCard(CasoClinico caso) {
+    final isDesbloqueado = _prefs == null ? (caso.id == 'caso_1') : CasosClinicosData.isCasoDesbloqueado(caso.id, _prefs!);
     final bool isGrave = caso.gravidade == 'GRAVE';
     final Color statusColor = isGrave ? CardioTheme.statusGrave : CardioTheme.statusMuitoUrgente;
+    final Color diffColor = caso.dificuldade == 'FÁCIL'
+        ? CardioTheme.primary
+        : caso.dificuldade == 'MÉDIO'
+            ? CardioTheme.statusMuitoUrgente
+            : CardioTheme.statusGrave;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: CardioTheme.surfaceCard,
+        color: isDesbloqueado ? CardioTheme.surfaceCard : CardioTheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: isGrave ? statusColor.withValues(alpha: 0.6) : CardioTheme.borderSubtle, width: 1),
+        border: Border.all(
+          color: isDesbloqueado
+              ? (isGrave ? statusColor.withValues(alpha: 0.6) : CardioTheme.borderSubtle)
+              : CardioTheme.borderSubtle.withValues(alpha: 0.4),
+          width: 1,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
@@ -518,10 +555,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
               children: [
-                PatientAvatarWidget(
-                  caso: caso,
-                  size: 56,
-                  showManchesterBadge: true,
+                Opacity(
+                  opacity: isDesbloqueado ? 1.0 : 0.45,
+                  child: PatientAvatarWidget(
+                    caso: caso,
+                    size: 56,
+                    showManchesterBadge: isDesbloqueado,
+                  ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -533,10 +573,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Flexible(
                             child: Text(
                               caso.nome,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
-                                color: CardioTheme.textPrimary,
+                                color: isDesbloqueado ? CardioTheme.textPrimary : CardioTheme.textMuted,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -545,30 +585,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: statusColor.withValues(alpha: 0.18),
+                              color: isDesbloqueado ? diffColor.withValues(alpha: 0.18) : Colors.white10,
                               borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: isDesbloqueado ? diffColor.withValues(alpha: 0.6) : Colors.white24,
+                                width: 0.8,
+                              ),
                             ),
                             child: Text(
-                              caso.gravidade,
+                              'NÍVEL ${caso.nivel} • ${caso.dificuldade}',
                               style: TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.bold,
-                                color: statusColor,
+                                color: isDesbloqueado ? diffColor : CardioTheme.textMuted,
                               ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 3),
                       Text(
-                        '${caso.leito} • ${caso.sala}',
-                        style: const TextStyle(fontSize: 11, color: CardioTheme.textMuted),
+                        isDesbloqueado
+                            ? '${caso.leito} • ${caso.sala}'
+                            : 'Bloqueado • Conclua o Nível ${caso.nivel - 1} para liberar',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isDesbloqueado ? CardioTheme.textMuted : CardioTheme.statusUrgente.withValues(alpha: 0.8),
+                        ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Icon(Icons.arrow_forward_ios, size: 13, color: CardioTheme.primary),
+                Icon(
+                  isDesbloqueado ? Icons.arrow_forward_ios : Icons.lock_outline,
+                  size: isDesbloqueado ? 13 : 18,
+                  color: isDesbloqueado ? CardioTheme.primary : CardioTheme.textMuted,
+                ),
               ],
             ),
           ),

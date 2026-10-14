@@ -1,10 +1,13 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/caso_clinico.dart';
 
 class CasosClinicosData {
   static const List<CasoClinico> casos = [
     CasoClinico(
       id: 'caso_1',
-      nome: 'Sr. Carlos Mendes',
+      nome: 'Carlos Mendes',
+      dificuldade: 'FÁCIL',
+      nivel: 1,
       idade: 62,
       sexo: 'Masculino',
       leito: 'Leito 02',
@@ -30,7 +33,9 @@ class CasosClinicosData {
     ),
     CasoClinico(
       id: 'caso_2',
-      nome: 'Dona Maria da Graça',
+      nome: 'Maria da Graça',
+      dificuldade: 'MÉDIO',
+      nivel: 2,
       idade: 58,
       sexo: 'Feminino',
       leito: 'Leito 06',
@@ -56,33 +61,9 @@ class CasosClinicosData {
     ),
     CasoClinico(
       id: 'caso_3',
-      nome: 'Lucas Almeida',
-      idade: 34,
-      sexo: 'Masculino',
-      leito: 'Leito 09',
-      sala: 'Observação Cardiológica',
-      gravidade: 'MODERADO',
-      classificacaoManchester: 'Laranja (10 min)',
-      tempoMinutos: 10,
-      avatar: '👨‍💼',
-      avatarAsset: 'assets/avatars/avatar_lucas.jpg',
-      medicoResponsavel: 'Dr. Lucas Silveira (Plantão)',
-      queixaPrincipal: 'Dor torácica ventilatório-dependente em pontada iniciada após quadro gripal e uso de energéticos há 2 dias. Piora ao deitar e melhora ao inclinar o tronco.',
-      evolucaoClinica: 'Apresenta atrito pericárdico à ausculta. ECG demonstra supradesnivelamento difuso côncavo de ST e infradesnivelamento de segmento PR.',
-      conduta: 'Ecocardiograma à beira-leito para descartar derrame pericárdico, anti-inflamatório (Ibuprofeno/Colchicina) e repouso.',
-      frequenciaCardiaca: '88 bpm',
-      pressaoArterial: '120/80 mmHg',
-      saturacaoO2: '98%',
-      temperatura: '37.4 °C',
-      fcCritica: false,
-      paCritica: false,
-      spo2Critica: false,
-      ecgResumo: 'Miopericardite Aguda / Supra côncavo difuso',
-      enzimasResumo: 'Troponina levemente alterada (0.08 ng/mL) • PCR elevada',
-    ),
-    CasoClinico(
-      id: 'caso_4',
-      nome: 'Dona Helena Souza',
+      nome: 'Helena Souza',
+      dificuldade: 'DIFÍCIL',
+      nivel: 3,
       idade: 71,
       sexo: 'Feminino',
       leito: 'Leito 12',
@@ -107,4 +88,38 @@ class CasosClinicosData {
       enzimasResumo: 'BNP: 1850 pg/mL (Crítico) • Troponina positiva',
     ),
   ];
+
+  /// Verifica se o caso clínico está desbloqueado para o jogador
+  /// Regra:
+  /// - Caso 1 (Fácil): Sempre liberado
+  /// - Caso 2 (Médio): Liberado ao concluir os 6 módulos do Caso 1
+  /// - Caso 3 (Difícil): Liberado ao concluir os 6 módulos do Caso 2
+  static bool isCasoDesbloqueado(String casoId, SharedPreferences prefs) {
+    if (casoId == 'caso_1') return true;
+    if (casoId == 'caso_2') {
+      return (prefs.getBool('venceu_caso_1_mod6') ?? false);
+    }
+    if (casoId == 'caso_3' || casoId == 'caso_4') {
+      return (prefs.getBool('venceu_caso_2_mod6') ?? false);
+    }
+    return false;
+  }
+
+  /// Retorna a mensagem informativa de bloqueio para o caso
+  static String obterMensagemBloqueio(String casoId) {
+    if (casoId == 'caso_2') {
+      return 'Nível Bloqueado! Conclua todos os 6 módulos de Carlos Mendes (Nível Fácil) para desbloquear Maria da Graça (Nível Médio).';
+    }
+    if (casoId == 'caso_3' || casoId == 'caso_4') {
+      return 'Nível Bloqueado! Conclua todos os 6 módulos de Maria da Graça (Nível Médio) para desbloquear Helena Souza (Nível Difícil).';
+    }
+    return 'Caso clínico bloqueado.';
+  }
+
+  /// Consulta a conclusão de módulo com retrocompatibilidade para chave migrada
+  static bool isModuloConcluido(String casoId, int modulo, SharedPreferences prefs) {
+    if (prefs.getBool('venceu_${casoId}_mod$modulo') == true) return true;
+    if (casoId == 'caso_3' && prefs.getBool('venceu_caso_4_mod$modulo') == true) return true;
+    return false;
+  }
 }

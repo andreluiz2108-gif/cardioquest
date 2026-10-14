@@ -23,7 +23,7 @@ void main() {
   });
 
   testWidgets('PatientAvatarWidget renderiza avatar com badge Manchester do caso', (WidgetTester tester) async {
-    final caso = CasosClinicosData.casos.first; // Sr. Carlos Mendes (Vermelho / 0m)
+    final caso = CasosClinicosData.casos.first; // Carlos Mendes (Vermelho / 0m)
 
     await tester.pumpWidget(
       MaterialApp(
@@ -46,6 +46,7 @@ void main() {
   testWidgets('Progresso de modulos permanece isolado por paciente', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({
       'venceu_caso_1_mod1': true,
+      'venceu_caso_1_mod6': true, // Conclui caso 1 para desbloquear caso 2 (Nível Médio)
     });
 
     // Abre prontuário de Carlos (caso_1)
@@ -57,8 +58,8 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    // Carlos deve ter Módulo 1 Concluído
-    expect(find.text('CONCLUÍDO'), findsOneWidget);
+    // Carlos deve ter Módulo 1 Concluído (e Módulo 6 Concluído)
+    expect(find.text('CONCLUÍDO'), findsWidgets);
 
     // Abre prontuário de Maria (caso_2) onde mod1 não foi feito
     await tester.pumpWidget(
@@ -69,14 +70,71 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    // Dona Maria NÃO deve ter Módulo 1 Concluído nem Módulo 2 liberado antecipadamente
+    // Maria NÃO deve ter Módulo 1 Concluído nem Módulo 2 liberado antecipadamente
     expect(find.text('CONCLUÍDO'), findsNothing);
   });
 
-  group('Validação do Banco Expandido de Questões e Casos Clínicos', () {
-    test('Todos os 4 pacientes possuem 5 perguntas nos modulos 1, 2, 3 e 5, e 6 itens no modulo 6', () {
-      expect(CasosClinicosData.casos.length, equals(4));
+  group('Validação dos 3 Níveis de Dificuldade e Desbloqueio Progressivo', () {
+    test('Configuração dos 3 casos com níveis e sem prefixos de tratamento', () {
+      expect(CasosClinicosData.casos.length, equals(3));
 
+      final caso1 = CasosClinicosData.casos[0];
+      final caso2 = CasosClinicosData.casos[1];
+      final caso3 = CasosClinicosData.casos[2];
+
+      expect(caso1.id, equals('caso_1'));
+      expect(caso1.nome, equals('Carlos Mendes'));
+      expect(caso1.dificuldade, equals('FÁCIL'));
+      expect(caso1.nivel, equals(1));
+
+      expect(caso2.id, equals('caso_2'));
+      expect(caso2.nome, equals('Maria da Graça'));
+      expect(caso2.dificuldade, equals('MÉDIO'));
+      expect(caso2.nivel, equals(2));
+
+      expect(caso3.id, equals('caso_3'));
+      expect(caso3.nome, equals('Helena Souza'));
+      expect(caso3.dificuldade, equals('DIFÍCIL'));
+      expect(caso3.nivel, equals(3));
+
+      // Garante ausência total de prefixos informais/tratamento nos nomes
+      for (final c in CasosClinicosData.casos) {
+        expect(c.nome.startsWith('Sr.'), isFalse, reason: '${c.nome} não deve conter Sr.');
+        expect(c.nome.startsWith('Senhor'), isFalse, reason: '${c.nome} não deve conter Senhor');
+        expect(c.nome.startsWith('Dona'), isFalse, reason: '${c.nome} não deve conter Dona');
+        expect(c.nome.startsWith('Sra.'), isFalse, reason: '${c.nome} não deve conter Sra.');
+      }
+    });
+
+    test('Regra de desbloqueio sequencial dos 3 níveis de dificuldade', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+
+      // Nível Fácil (caso_1) sempre liberado
+      expect(CasosClinicosData.isCasoDesbloqueado('caso_1', prefs), isTrue);
+
+      // Nível Médio (caso_2) bloqueado inicialmente
+      expect(CasosClinicosData.isCasoDesbloqueado('caso_2', prefs), isFalse);
+
+      // Nível Difícil (caso_3) bloqueado inicialmente
+      expect(CasosClinicosData.isCasoDesbloqueado('caso_3', prefs), isFalse);
+
+      // Conclui todos os 6 módulos do caso_1 (Fácil)
+      await prefs.setBool('venceu_caso_1_mod6', true);
+
+      // Nível Médio agora deve estar desbloqueado
+      expect(CasosClinicosData.isCasoDesbloqueado('caso_2', prefs), isTrue);
+      // Nível Difícil ainda bloqueado
+      expect(CasosClinicosData.isCasoDesbloqueado('caso_3', prefs), isFalse);
+
+      // Conclui todos os 6 módulos do caso_2 (Médio)
+      await prefs.setBool('venceu_caso_2_mod6', true);
+
+      // Nível Difícil agora deve estar desbloqueado
+      expect(CasosClinicosData.isCasoDesbloqueado('caso_3', prefs), isTrue);
+    });
+
+    test('Todos os 3 pacientes possuem 5 perguntas nos modulos 1, 2, 3 e 5, e 6 itens no modulo 6', () {
       for (final caso in CasosClinicosData.casos) {
         // Módulo 1: Triagem (5 perguntas por caso)
         final triagem = QuestionariosData.obterPerguntasTriagem(caso);

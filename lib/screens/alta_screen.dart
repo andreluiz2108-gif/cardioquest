@@ -46,6 +46,15 @@ class _AltaScreenState extends State<AltaScreen> {
         await prefs.setBool('venceu_${casoId}_mod6', true);
         await prefs.setBool('venceu_mod6', true);
 
+        String mensagemDesbloqueio = '';
+        if (_caso.id == 'caso_1') {
+          mensagemDesbloqueio = '\n\n🔓 NOVO NÍVEL DESBLOQUEADO: Nível Médio (Maria da Graça) já está disponível na Central de Leitos!';
+        } else if (_caso.id == 'caso_2') {
+          mensagemDesbloqueio = '\n\n🔓 NOVO NÍVEL DESBLOQUEADO: Nível Difícil (Helena Souza) já está disponível na Central de Leitos!';
+        } else {
+          mensagemDesbloqueio = '\n\n🏆 MAESTRIA CARDÍACA! Você concluiu com louvor todos os 3 níveis de dificuldade do CardioQuest!';
+        }
+
         if (mounted) {
           showDialog(
             context: context,
@@ -64,7 +73,7 @@ class _AltaScreenState extends State<AltaScreen> {
                 ],
               ),
               content: Text(
-                'Parabéns! Você conduziu todas as 6 etapas do atendimento de ${_caso.nome} com excelência técnica e rigor clínico!\n\nVocê conquistou +200 XP e finalizou este atendimento!',
+                'Parabéns! Você conduziu todas as 6 etapas do atendimento de ${_caso.nome} (Nível ${_caso.dificuldade}) com excelência técnica e rigor clínico!\n\nVocê conquistou +200 XP e finalizou este atendimento!$mensagemDesbloqueio',
                 style: const TextStyle(color: CardioTheme.textSecondary, fontSize: 15),
               ),
               actions: [

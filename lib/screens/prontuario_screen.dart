@@ -27,7 +27,8 @@ class ProntuarioScreen extends StatefulWidget {
 
 class _ProntuarioScreenState extends State<ProntuarioScreen> {
   late CasoClinico _casoSelecionado;
-  int _tabFiltroLeitos = 0; // 0: Todos, 1: Sala Vermelha (Grave), 2: Observação
+  int _tabFiltroLeitos = 0; // 0: Todos (3), 1: Fácil, 2: Médio, 3: Difícil
+  SharedPreferences? _prefs;
 
   bool _mod1Concluido = false;
   bool _mod2Liberado = false;
@@ -54,33 +55,66 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
   }
 
   void _definirCasoInicial() {
+    CasoClinico inicial = CasosClinicosData.casos.first;
     if (widget.casoInicialId != null) {
-      _casoSelecionado = CasosClinicosData.casos.firstWhere(
+      final candidato = CasosClinicosData.casos.firstWhere(
         (c) => c.id == widget.casoInicialId,
         orElse: () => CasosClinicosData.casos.first,
       );
-    } else {
-      _casoSelecionado = CasosClinicosData.casos.first;
+      if (_prefs == null || CasosClinicosData.isCasoDesbloqueado(candidato.id, _prefs!)) {
+        inicial = candidato;
+      }
     }
+    _casoSelecionado = inicial;
   }
 
   Future<void> _carregarProgresso() async {
     final prefs = await SharedPreferences.getInstance();
+    _prefs = prefs;
+
+    // Se o caso atual estiver bloqueado (ex: carregamento inicial assíncrono), volta para caso desbloqueado
+    if (!CasosClinicosData.isCasoDesbloqueado(_casoSelecionado.id, prefs)) {
+      _casoSelecionado = CasosClinicosData.casos.first;
+    }
+
     final casoId = _casoSelecionado.id;
     if (mounted) {
       setState(() {
-        _mod1Concluido = prefs.getBool('venceu_${casoId}_mod1') ?? false;
+        _mod1Concluido = CasosClinicosData.isModuloConcluido(casoId, 1, prefs);
         _mod2Liberado = _mod1Concluido;
-        _mod3Liberado = prefs.getBool('venceu_${casoId}_mod2') ?? false;
-        _mod4Liberado = prefs.getBool('venceu_${casoId}_mod3') ?? false;
-        _mod5Liberado = prefs.getBool('venceu_${casoId}_mod4') ?? false;
-        _mod6Liberado = prefs.getBool('venceu_${casoId}_mod5') ?? false;
-        _mod6Concluido = prefs.getBool('venceu_${casoId}_mod6') ?? false;
+        _mod3Liberado = CasosClinicosData.isModuloConcluido(casoId, 2, prefs);
+        _mod4Liberado = CasosClinicosData.isModuloConcluido(casoId, 3, prefs);
+        _mod5Liberado = CasosClinicosData.isModuloConcluido(casoId, 4, prefs);
+        _mod6Liberado = CasosClinicosData.isModuloConcluido(casoId, 5, prefs);
+        _mod6Concluido = CasosClinicosData.isModuloConcluido(casoId, 6, prefs);
       });
     }
   }
 
   void _trocarPaciente(CasoClinico caso) {
+    if (_prefs != null && !CasosClinicosData.isCasoDesbloqueado(caso.id, _prefs!)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.lock_outline, color: Colors.white, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  CasosClinicosData.obterMensagemBloqueio(caso.id),
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: CardioTheme.statusGrave,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _casoSelecionado = caso;
     });
@@ -89,9 +123,11 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
 
   List<CasoClinico> _obterCasosFiltrados() {
     if (_tabFiltroLeitos == 1) {
-      return CasosClinicosData.casos.where((c) => c.gravidade == 'GRAVE').toList();
+      return CasosClinicosData.casos.where((c) => c.dificuldade == 'FÁCIL').toList();
     } else if (_tabFiltroLeitos == 2) {
-      return CasosClinicosData.casos.where((c) => c.gravidade != 'GRAVE').toList();
+      return CasosClinicosData.casos.where((c) => c.dificuldade == 'MÉDIO').toList();
+    } else if (_tabFiltroLeitos == 3) {
+      return CasosClinicosData.casos.where((c) => c.dificuldade == 'DIFÍCIL').toList();
     }
     return CasosClinicosData.casos;
   }
@@ -120,15 +156,20 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 1. Abas de Filtro de Leitos (Inspirado na Imagem 3: Todos, Em Atendimento, Concluídos)
-                Row(
-                  children: [
-                    _buildPillTab('Todos os Leitos (4)', 0),
-                    const SizedBox(width: 8),
-                    _buildPillTab('Sala Vermelha (2)', 1),
-                    const SizedBox(width: 8),
-                    _buildPillTab('Observação (2)', 2),
-                  ],
+                // 1. Abas de Filtro de Níveis de Dificuldade
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildPillTab('Todos (3)', 0),
+                      const SizedBox(width: 8),
+                      _buildPillTab('Fácil (Nível 1)', 1),
+                      const SizedBox(width: 8),
+                      _buildPillTab('Médio (Nível 2)', 2),
+                      const SizedBox(width: 8),
+                      _buildPillTab('Difícil (Nível 3)', 3),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 14),
 
@@ -142,26 +183,36 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                     itemBuilder: (context, index) {
                       final paciente = casosExibidos[index];
                       final isSelected = paciente.id == _casoSelecionado.id;
-                      final isGrave = paciente.gravidade == 'GRAVE';
-                      final Color statusColor = isGrave ? CardioTheme.statusGrave : CardioTheme.statusMuitoUrgente;
+                      final isDesbloqueado = _prefs == null ? (paciente.id == 'caso_1') : CasosClinicosData.isCasoDesbloqueado(paciente.id, _prefs!);
+                      final Color diffColor = paciente.dificuldade == 'FÁCIL'
+                          ? CardioTheme.primary
+                          : paciente.dificuldade == 'MÉDIO'
+                              ? CardioTheme.statusMuitoUrgente
+                              : CardioTheme.statusGrave;
 
                       return GestureDetector(
                         onTap: () => _trocarPaciente(paciente),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 180),
-                          width: 215,
+                          width: 220,
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                           decoration: BoxDecoration(
-                            color: isSelected ? CardioTheme.surfaceCard : CardioTheme.surface.withValues(alpha: 0.6),
+                            color: isSelected
+                                ? CardioTheme.surfaceCard
+                                : (isDesbloqueado
+                                    ? CardioTheme.surface.withValues(alpha: 0.6)
+                                    : CardioTheme.surface.withValues(alpha: 0.3)),
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
-                              color: isSelected ? statusColor : CardioTheme.borderSubtle,
+                              color: isSelected
+                                  ? (isDesbloqueado ? diffColor : CardioTheme.borderSubtle)
+                                  : (isDesbloqueado ? CardioTheme.borderSubtle : CardioTheme.borderSubtle.withValues(alpha: 0.3)),
                               width: isSelected ? 2.0 : 1.0,
                             ),
                             boxShadow: isSelected
                                 ? [
                                     BoxShadow(
-                                      color: statusColor.withValues(alpha: 0.25),
+                                      color: diffColor.withValues(alpha: 0.25),
                                       blurRadius: 10,
                                       spreadRadius: 0,
                                     )
@@ -170,11 +221,14 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                           ),
                           child: Row(
                             children: [
-                              PatientAvatarWidget(
-                                caso: paciente,
-                                size: 52,
-                                isSelected: isSelected,
-                                showManchesterBadge: true,
+                              Opacity(
+                                opacity: isDesbloqueado ? 1.0 : 0.45,
+                                child: PatientAvatarWidget(
+                                  caso: paciente,
+                                  size: 52,
+                                  isSelected: isSelected,
+                                  showManchesterBadge: isDesbloqueado,
+                                ),
                               ),
                               const SizedBox(width: 10),
                               Expanded(
@@ -182,22 +236,36 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Text(
-                                      paciente.nome,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: isSelected ? CardioTheme.textPrimary : CardioTheme.textSecondary,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                    Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            paciente.nome,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              color: isDesbloqueado
+                                                  ? (isSelected ? CardioTheme.textPrimary : CardioTheme.textSecondary)
+                                                  : CardioTheme.textMuted,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        if (!isDesbloqueado) ...[
+                                          const SizedBox(width: 4),
+                                          const Icon(Icons.lock_outline, size: 12, color: CardioTheme.textMuted),
+                                        ],
+                                      ],
                                     ),
                                     Text(
-                                      '${paciente.leito} • ${paciente.gravidade}',
+                                      isDesbloqueado
+                                          ? '${paciente.leito} • NÍVEL ${paciente.nivel} (${paciente.dificuldade})'
+                                          : 'NÍVEL ${paciente.nivel} • BLOQUEADO',
                                       style: TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w600,
-                                        color: statusColor,
+                                        color: isDesbloqueado ? diffColor : CardioTheme.textMuted,
                                       ),
                                       maxLines: 1,
                                     ),
@@ -250,31 +318,69 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                      decoration: BoxDecoration(
-                                        color: (_casoSelecionado.gravidade == 'GRAVE'
-                                                ? CardioTheme.statusGrave
-                                                : CardioTheme.statusMuitoUrgente)
-                                            .withValues(alpha: 0.2),
-                                        borderRadius: BorderRadius.circular(6),
-                                        border: Border.all(
-                                          color: _casoSelecionado.gravidade == 'GRAVE'
-                                              ? CardioTheme.statusGrave
-                                              : CardioTheme.statusMuitoUrgente,
-                                          width: 1,
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                          decoration: BoxDecoration(
+                                            color: (_casoSelecionado.dificuldade == 'FÁCIL'
+                                                    ? CardioTheme.primary
+                                                    : _casoSelecionado.dificuldade == 'MÉDIO'
+                                                        ? CardioTheme.statusMuitoUrgente
+                                                        : CardioTheme.statusGrave)
+                                                .withValues(alpha: 0.18),
+                                            borderRadius: BorderRadius.circular(6),
+                                            border: Border.all(
+                                              color: _casoSelecionado.dificuldade == 'FÁCIL'
+                                                  ? CardioTheme.primary
+                                                  : _casoSelecionado.dificuldade == 'MÉDIO'
+                                                      ? CardioTheme.statusMuitoUrgente
+                                                      : CardioTheme.statusGrave,
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'NÍVEL ${_casoSelecionado.nivel} • ${_casoSelecionado.dificuldade}',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color: _casoSelecionado.dificuldade == 'FÁCIL'
+                                                  ? CardioTheme.primary
+                                                  : _casoSelecionado.dificuldade == 'MÉDIO'
+                                                      ? CardioTheme.statusMuitoUrgente
+                                                      : CardioTheme.statusGrave,
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                      child: Text(
-                                        _casoSelecionado.gravidade,
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: _casoSelecionado.gravidade == 'GRAVE'
-                                              ? CardioTheme.statusGrave
-                                              : CardioTheme.statusMuitoUrgente,
+                                        const SizedBox(width: 6),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                          decoration: BoxDecoration(
+                                            color: (_casoSelecionado.gravidade == 'GRAVE'
+                                                    ? CardioTheme.statusGrave
+                                                    : CardioTheme.statusMuitoUrgente)
+                                                .withValues(alpha: 0.2),
+                                            borderRadius: BorderRadius.circular(6),
+                                            border: Border.all(
+                                              color: _casoSelecionado.gravidade == 'GRAVE'
+                                                  ? CardioTheme.statusGrave
+                                                  : CardioTheme.statusMuitoUrgente,
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            _casoSelecionado.gravidade,
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color: _casoSelecionado.gravidade == 'GRAVE'
+                                                  ? CardioTheme.statusGrave
+                                                  : CardioTheme.statusMuitoUrgente,
+                                            ),
+                                          ),
                                         ),
-                                      ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -455,7 +561,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                 // Módulo 4: Protocolo MONA
                 _buildModuloTile(
                   numero: '4',
-                  titulo: 'Protocolo Farmacológico (${_casoSelecionado.id == 'caso_3' ? 'Anti-inflamatório' : _casoSelecionado.id == 'caso_4' ? 'Diurético/VNI' : 'Antiagregação'})',
+                  titulo: 'Protocolo Farmacológico (${_casoSelecionado.id == 'caso_1' ? 'MONA' : _casoSelecionado.id == 'caso_2' ? 'Antiagregação' : 'Diurético/VNI'})',
                   descricao: 'Selecione e administre as medicações imediatas indicadas.',
                   xp: '+200 XP',
                   isLiberado: _mod4Liberado,

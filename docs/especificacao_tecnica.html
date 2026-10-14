@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>CardioQuest — Especificação Técnica de Funcionalidades, Arquitetura e Fluxogramas</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 18mm 16mm 18mm 16mm;
+      @bottom-right {
+        content: counter(page);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 10pt;
+      line-height: 1.55;
+      color: #1E293B;
+      background-color: #FFFFFF;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Utilitários de Quebra de Página */
+    .page-break {
+      page-break-after: always;
+      break-after: page;
+    }
+
+    .avoid-break {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    /* Capa Executiva */
+    .cover-page {
+      height: 940px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border: 2px solid #1E3A8A;
+      border-radius: 12px;
+      padding: 50px 40px;
+      background: linear-gradient(175deg, #F8FAFC 0%, #EFF6FF 50%, #E2E8F0 100%);
+      position: relative;
+    }
+
+    .cover-header {
+      border-bottom: 3px solid #1E3A8A;
+      padding-bottom: 25px;
+    }
+
+    .cover-badge {
+      display: inline-block;
+      background-color: #1E3A8A;
+      color: #FFFFFF;
+      font-size: 9pt;
+      font-weight: 800;
+      letter-spacing: 2px;
+      padding: 6px 14px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+    }
+
+    .cover-title {
+      font-size: 28pt;
+      font-weight: 900;
+      color: #0F172A;
+      line-height: 1.15;
+      margin: 0 0 10px 0;
+    }
+
+    .cover-subtitle {
+      font-size: 13pt;
+      font-weight: 600;
+      color: #0369A1;
+      margin: 0;
+    }
+
+    .cover-description {
+      font-size: 11pt;
+      color: #475569;
+      line-height: 1.6;
+      margin-top: 30px;
+      max-width: 650px;
+    }
+
+    .cover-pillars {
+      display: flex;
+      gap: 15px;
+      margin-top: 40px;
+    }
+
+    .cover-pillar-card {
+      flex: 1;
+      background: #FFFFFF;
+      border: 1px solid #CBD5E1;
+      border-top: 4px solid #0284C7;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .cover-pillar-title {
+      font-size: 10pt;
+      font-weight: 800;
+      color: #0F172A;
+      margin-bottom: 6px;
+    }
+
+    .cover-pillar-text {
+      font-size: 8.5pt;
+      color: #64748B;
+      line-height: 1.4;
+    }
+
+    .cover-meta {
+      border-top: 1px solid #CBD5E1;
+      padding-top: 20px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      font-size: 9pt;
+      color: #334155;
+    }
+
+    .cover-meta-item strong {
+      color: #0F172A;
+      font-weight: 700;
+    }
+
+    /* Tipografia de Conteúdo */
+    h1 {
+      font-size: 18pt;
+      font-weight: 900;
+      color: #1E3A8A;
+      border-bottom: 2px solid #DBEAFE;
+      padding-bottom: 8px;
+      margin-top: 28px;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    h2 {
+      font-size: 13pt;
+      font-weight: 800;
+      color: #0369A1;
+      margin-top: 22px;
+      margin-bottom: 10px;
+      border-left: 4px solid #0284C7;
+      padding-left: 10px;
+    }
+
+    h3 {
+      font-size: 10.5pt;
+      font-weight: 700;
+      color: #0F172A;
+      margin-top: 16px;
+      margin-bottom: 6px;
+    }
+
+    p {
+      margin-top: 0;
+      margin-bottom: 10px;
+      text-align: justify;
+    }
+
+    /* Tabelas Técnicas */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 18px 0;
+      font-size: 8.5pt;
+    }
+
+    th {
+      background-color: #1E3A8A;
+      color: #FFFFFF;
+      font-weight: 700;
+      text-align: left;
+      padding: 9px 10px;
+      border: 1px solid #1E3A8A;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    td {
+      padding: 8px 10px;
+      border: 1px solid #CBD5E1;
+      vertical-align: top;
+    }
+
+    tr:nth-child(even) td {
+      background-color: #F8FAFC;
+    }
+
+    /* Boxes de Destaque */
+    .info-box {
+      background-color: #F0F9FF;
+      border-left: 4px solid #0284C7;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin: 14px 0;
+      font-size: 9pt;
+      color: #0C4A6E;
+    }
+
+    .alert-box {
+      background-color: #FEF2F2;
+      border-left: 4px solid #EF4444;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin: 14px 0;
+      font-size: 9pt;
+      color: #7F1D1D;
+    }
+
+    .success-box {
+      background-color: #ECFDF5;
+      border-left: 4px solid #10B981;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin: 14px 0;
+      font-size: 9pt;
+      color: #064E3B;
+    }
+
+    /* Diagramas e SVGs */
+    .diagram-container {
+      margin: 18px 0;
+      background: #0F172A;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 14px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      page-break-inside: avoid;
+    }
+
+    .diagram-caption {
+      font-size: 8.5pt;
+      font-weight: 700;
+      color: #94A3B8;
+      text-align: center;
+      margin-top: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .code-badge {
+      font-family: "Courier New", Courier, monospace;
+      background-color: #E2E8F0;
+      color: #0F172A;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 8pt;
+      font-weight: 600;
+    }
+
+    ul, ol {
+      margin-top: 4px;
+      margin-bottom: 12px;
+      padding-left: 20px;
+    }
+
+    li {
+      margin-bottom: 4px;
+    }
+
+    /* Cabeçalho e Rodapé */
+    .doc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #E2E8F0;
+      padding-bottom: 6px;
+      margin-bottom: 18px;
+      font-size: 8pt;
+      color: #64748B;
+      font-weight: 600;
+    }
+
+    .doc-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid #E2E8F0;
+      padding-top: 6px;
+      font-size: 8pt;
+      color: #94A3B8;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================= CAPA EXECUTIVA ================= -->
+  <div class="cover-page page-break">
+    <div class="cover-header">
+      <div class="cover-badge">Documentação Técnica Oficial • Arquitetura &amp; Software</div>
+      <h1 class="cover-title">CardioQuest</h1>
+      <div class="cover-subtitle">Simulação Clínica Gamificada em Enfermagem Cardiológica</div>
+      <div class="cover-description">
+        Especificação formal e técnica das funcionalidades do sistema, mapeamento exaustivo de navegação e transições de tela, modelo de domínio clínico para Síndrome Coronariana Aguda (SCA) e fluxogramas vetoriais de arquitetura de software e raciocínio diagnóstico.
+      </div>
+    </div>
+
+    <div class="cover-pillars">
+      <div class="cover-pillar-card">
+        <div class="cover-pillar-title">AGILIDADE CLÍNICA</div>
+        <div class="cover-pillar-text">Treinamento intensivo para tempo Porta-ECG &lt; 10 min e classificação imediata em triagem Manchester.</div>
+      </div>
+      <div class="cover-pillar-card">
+        <div class="cover-pillar-title">PRECISÃO DE PROTOCOLO</div>
+        <div class="cover-pillar-text">Fixação das 4 condutas do protocolo farmacológico (MONA), identificação de supra de ST e cinética de troponina.</div>
+      </div>
+      <div class="cover-pillar-card">
+        <div class="cover-pillar-title">ENGENHARIA ROBUSTA</div>
+        <div class="cover-pillar-text">Desenvolvimento em Flutter 3.x com arquitetura reativa, persistência local blindada e total conformidade com a LGPD.</div>
+      </div>
+    </div>
+
+    <div class="cover-meta">
+      <div class="cover-meta-item"><strong>Projeto:</strong> CardioQuest App (Flutter / Dart)</div>
+      <div class="cover-meta-item"><strong>Versão do Documento:</strong> 1.0 (Produção Homologada)</div>
+      <div class="cover-meta-item"><strong>Público-Alvo:</strong> Desenvolvedores, Avaliadores, Docentes de Saúde</div>
+      <div class="cover-meta-item"><strong>Data de Emissão:</strong> 13 de Outubro de 2026</div>
+      <div class="cover-meta-item"><strong>Padrão Metodológico:</strong> SDD (Spec-Driven Dev) + RPI</div>
+      <div class="cover-meta-item"><strong>Persistência:</strong> SharedPreferences (Local Sandbox)</div>
+    </div>
+  </div>
+
+  <!-- ================= CAPÍTULO 1 ================= -->
+  <div class="doc-header">
+    <span>CARDIOQUEST • ESPECIFICAÇÃO TÉCNICA E FLUXOGRAMAS</span>
+    <span>CAPÍTULO 1 • VISÃO GERAL E DOMÍNIO</span>
+  </div>
+
+  <h1>1. Visão Geral do Sistema e Domínio Clínico</h1>
+
+  <h2>1.1. Contexto e Problema Resolvido</h2>
+  <p>
+    A mortalidade decorrente do <strong>Infarto Agudo do Miocárdio com Supradesnivelamento do Segmento ST (IAMCSST)</strong> e da <strong>Síndrome Coronariana Aguda (SCA)</strong> está intimamente vinculada ao intervalo temporal entre a admissão do paciente no pronto atendimento e a instituição da terapia de reperfusão miocárdica (angioplastia coronária primária ou trombólise). Diretrizes internacionais da <em>American Heart Association (AHA)</em> e da <em>Sociedade Brasileira de Cardiologia (SBC)</em> preconizam metas rigorosas de tempo porta-atendimento, com destaque para a obtenção e interpretação do eletrocardiograma de 12 derivações em <strong>menos de 10 minutos</strong> após a admissão do paciente.
+  </p>
+  <p>
+    O <strong>CardioQuest</strong> é uma plataforma de simulação clínica gamificada desenvolvida sob o framework Flutter, concebida para preencher a lacuna entre o ensino teórico de enfermagem e o raciocínio sob pressão da sala de emergência. A ferramenta submete o discente/profissional a cenários clínicos fidedignos, exigindo tomada de decisão sequencial e fundamentada em evidências.
+  </p>
+
+  <h2>1.2. Mapeamento dos Pacientes Simulados (Leitos Clínicos)</h2>
+  <p>
+    A aplicação disponibiliza 4 casos clínicos pré-configurados em sua base de dados (<span class="code-badge">CasosClinicosData</span>), abrangendo desde o infarto com supra clássico até quadros atípicos e diagnósticos diferenciais de dor torácica:
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID / Paciente</th>
+        <th>Perfil / Idade</th>
+        <th>Local / Leito</th>
+        <th>Quadro Clínico &amp; ECG</th>
+        <th>Gravidade / Meta</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>caso_1</strong><br>Sr. Carlos Mendes</td>
+        <td>62 anos<br>Masculino (Hipertenso, Tabagista)</td>
+        <td>Sala Vermelha<br>Leito 02</td>
+        <td>Dor opressiva retroesternal (9/10), irradiação para MSE e mandíbula há 40 min, sudorese fria. ECG: <strong>IAMCSST Parede Anterior (Supra ST V1-V4)</strong>.</td>
+        <td><strong style="color: #DC2626;">GRAVE</strong><br>Manchester: Vermelho (0 min)</td>
+      </tr>
+      <tr>
+        <td><strong>caso_2</strong><br>Dona Maria da Graça</td>
+        <td>58 anos<br>Feminino (Diabética de longa data)</td>
+        <td>Semi-Intensiva<br>Leito 06</td>
+        <td>Equivalente isquêmico atípico em diabética: desconforto epigástrico e dispneia leve aos esforços há 3h. ECG: <strong>IAMSSST com inversão de T em parede lateral (V5-V6)</strong>.</td>
+        <td><strong style="color: #EA580C;">MODERADO</strong><br>Manchester: Laranja (10 min)</td>
+      </tr>
+      <tr>
+        <td><strong>caso_3</strong><br>Lucas Almeida</td>
+        <td>34 anos<br>Masculino (Jovem, pós-viral)</td>
+        <td>Observação<br>Leito 09</td>
+        <td>Dor torácica ventilatório-dependente em pontada, melhora ao inclinar o tórax para frente. ECG: <strong>Miopericardite Aguda com supradesnivelamento côncavo difuso</strong>.</td>
+        <td><strong style="color: #EA580C;">MODERADO</strong><br>Manchester: Laranja (10 min)</td>
+      </tr>
+      <tr>
+        <td><strong>caso_4</strong><br>Dona Helena Souza</td>
+        <td>71 anos<br>Feminino (Insuficiência Cardíaca)</td>
+        <td>CTI / Sala Vermelha<br>Leito 12</td>
+        <td>Edema Agudo de Pulmão (EAP) cardiogênico pós-infarto: dispneia severa, estertores crepitantes bilaterais e SpO2 84%. ECG: <strong>Taquicardia Sinusal com SVE</strong>.</td>
+        <td><strong style="color: #DC2626;">GRAVE</strong><br>Manchester: Vermelho (0 min)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>1.3. Mecânica de Gamificação e Patentes de Carreira</h2>
+  <p>
+    O sistema adota uma árvore balanceada de progressão de experiência (XP), onde o enfermeiro acumula pontos ao validar intervenções clínicas corretas em cada módulo. A progressão de carreira é mapeada em 7 patentes hierárquicas:
+  </p>
+  <ul>
+    <li><strong>Estudante Calouro:</strong> 0 a 149 XP (Estado inicial do plantão).</li>
+    <li><strong>Interno de Enfermagem:</strong> 150 a 299 XP (Conclusão do Módulo de Triagem).</li>
+    <li><strong>Enfermeiro Júnior:</strong> 300 a 499 XP (Domínio de Triagem e Anamnese).</li>
+    <li><strong>Enfermeiro Pleno:</strong> 500 a 699 XP (Interpretação precisa de traçado eletrocardiográfico).</li>
+    <li><strong>Especialista em Cardio:</strong> 700 a 849 XP (Manejo farmacológico do protocolo imediato).</li>
+    <li><strong>Mestre do Plantão:</strong> 850 a 999 XP (Domínio da cinética de biomarcadores cardíacos).</li>
+    <li><strong>Lenda da Enfermagem:</strong> 1.000+ XP (Condução completa do caso clínico e encaminhamento seguro).</li>
+  </ul>
+
+  <!-- ================= CAPÍTULO 2 ================= -->
+  <div class="page-break"></div>
+  <div class="doc-header">
+    <span>CARDIOQUEST • ESPECIFICAÇÃO TÉCNICA E FLUXOGRAMAS</span>
+    <span>CAPÍTULO 2 • ARQUITETURA DE TELAS E COMPONENTES</span>
+  </div>
+
+  <h1>2. Especificação Detalhada das Telas e Funcionalidades</h1>
+
+  <h2>2.1. WelcomeScreen — Identificação Profissional e Acesso ao Plantão</h2>
+  <p>
+    Constitui a porta de entrada da aplicação para novas sessões. Possui responsabilidade de capturar o nome do usuário e atribuir um avatar representativo para compor o crachá institucional do plantão médico.
+  </p>
+  <ul>
+    <li><strong>Entrada de Dados:</strong> Campo <span class="code-badge">TextField</span> com validação não-nula (<span class="code-badge">nome.trim().isNotEmpty</span>).</li>
+    <li><strong>Seleção de Avatar:</strong> Seletor composto por 6 perfis profissionais em alta definição (3 enfermeiros masculinos e 3 enfermeiras femininas), renderizados com fallback em emoji (<span class="code-badge">👨‍⚕️</span> / <span class="code-badge">👩‍⚕️</span>) e anéis luminosos de seleção ciano.</li>
+    <li><strong>Ação de Despacho:</strong> O botão "Bater Ponto &amp; Assumir Plantão" persiste as preferências e executa <span class="code-badge">Navigator.pushReplacement</span> para a <span class="code-badge">DashboardScreen</span>, eliminando o formulário de crachá da pilha de navegação.</li>
+  </ul>
+
+  <h2>2.2. DashboardScreen — Central do Plantão Médico e Telemetria</h2>
+  <p>
+    Atua como o centro de comando do usuário logado. Agrupa informações de monitorização contínua, status da carreira e acesso direto aos prontuários clínicos.
+  </p>
+  <ul>
+    <li><strong>HUD de Carreira e XP:</strong> Apresenta a foto do enfermeiro, nome, patente atual, barra linear de progresso percentual até o próximo nível e contador de módulos concluídos (0 a 6).</li>
+    <li><strong>Telemetria em Tempo Real (Leito 02):</strong> Barra horizontal de badges biométricos (<span class="code-badge">TelemetryBadge</span>) exibindo Frequência Cardíaca (118 bpm - Crítica), Pressão Arterial (160/100 mmHg - Crítica), Saturação de O2 (92% - Alerta) e Temperatura corporal (37.8 °C), munidos de sinalizadores de tendência (<span class="code-badge">up</span>, <span class="code-badge">down</span>, <span class="code-badge">stable</span>).</li>
+    <li><strong>Lista de Pacientes Ativos:</strong> Cards táteis com avatar do paciente, nome, leito, sala e etiqueta de criticidade (GRAVE / MODERADO). Ao tocar, abre a tela de prontuário direcionada ao paciente escolhido.</li>
+    <li><strong>Rotina de Reset Seguro:</strong> Botão no AppBar que dispara um <span class="code-badge">AlertDialog</span> para confirmar a exclusão total do progresso (<span class="code-badge">prefs.clear()</span>), redirecionando para a <span class="code-badge">WelcomeScreen</span>.</li>
+  </ul>
+
+  <h2>2.3. ProntuarioScreen — Hub Clínico e Motor de Travas (Lock Engine)</h2>
+  <p>
+    É a tela fulcral do atendimento ao caso selecionado. Integra a visão holística do paciente com a esteira progressiva dos 6 módulos clínicos.
+  </p>
+  <ul>
+    <li><strong>Abas de Filtragem de Leitos:</strong> Permite alternar entre "Todos os Leitos (4)", "Sala Vermelha (2)" e "Observação (2)".</li>
+    <li><strong>Carrossel de Seleção Rápida de Pacientes:</strong> Lista horizontal permitindo alternar instantaneamente o paciente ativo sem desestruturar a pilha de navegação.</li>
+    <li><strong>Banner Clínico Completo:</strong> Dados demográficos, queixa principal detalhada, evolução médica e prescrição vigente.</li>
+    <li><strong>Motor de Destravamento Sequencial (Lock Engine):</strong> Avalia em tempo de montagem do widget as variáveis persistidas (<span class="code-badge">venceu_{casoId}_modX</span>). Garante que o discente só possa avançar para o Módulo N se o Módulo N-1 tiver sido concluído com êxito.</li>
+  </ul>
+
+  <h2>2.4. Circuito dos 6 Módulos Clínicos de Atendimento</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Módulo</th>
+        <th>Nome Clínico</th>
+        <th>Objetivo Pedagógico</th>
+        <th>Critério de Conclusão</th>
+        <th>Recompensa</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Módulo 1</strong></td>
+        <td>Triagem Manchester</td>
+        <td>Classificar o paciente na cor correta do protocolo de Manchester e estabelecer o tempo porta-atendimento.</td>
+        <td>Acerto sequencial das perguntas de estratificação de risco imediato.</td>
+        <td>+150 XP<br>Destrava Mod 2</td>
+      </tr>
+      <tr>
+        <td><strong>Módulo 2</strong></td>
+        <td>Anamnese Direcionada</td>
+        <td>Mapear características da dor, tempo de evolução, fatores de risco e contraindicações farmacológicas.</td>
+        <td>Identificação assertiva dos sintomas cardiovasculares típicos vs atípicos.</td>
+        <td>+150 XP<br>Destrava Mod 3</td>
+      </tr>
+      <tr>
+        <td><strong>Módulo 3</strong></td>
+        <td>Eletrocardiograma (ECG)</td>
+        <td>Reconhecer alterações de segmento ST (supra anterior, inversão de T, supra côncavo ou sobrecarga).</td>
+        <td>Diagnóstico eletrocardiográfico correto dentro da janela porta-ECG &lt; 10 min.</td>
+        <td>+200 XP<br>Destrava Mod 4</td>
+      </tr>
+      <tr>
+        <td><strong>Módulo 4</strong></td>
+        <td>Protocolo Farmacológico</td>
+        <td>Selecionar exatamente as 4 intervenções farmacológicas prioritárias indicadas para o caso.</td>
+        <td>Marcação precisa do quarteto terapêutico no gabarito farmacológico.</td>
+        <td>+200 XP<br>Destrava Mod 5</td>
+      </tr>
+      <tr>
+        <td><strong>Módulo 5</strong></td>
+        <td>Enzimas &amp; Biomarcadores</td>
+        <td>Interpretar curvas laboratoriais de Troponina e CK-MB e reconhecer dano miocárdico ou reinfarto.</td>
+        <td>Análise correta dos níveis séricos e curva temporal dos biomarcadores.</td>
+        <td>+150 XP<br>Destrava Mod 6</td>
+      </tr>
+      <tr>
+        <td><strong>Módulo 6</strong></td>
+        <td>Alta &amp; Desfecho Clínico</td>
+        <td>Definir encaminhamento seguro (Hemodinâmica / UCO) e validar condutas de prevenção secundária.</td>
+        <td>Julgamento correto das orientações de cessação de risco e educação em saúde.</td>
+        <td>+200 XP<br>Finaliza Caso</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>2.5. TrofeusScreen — Galeria de Conquistas e Mérito Clínico</h2>
+  <p>
+    Exibe uma grade de 14 medalhas técnicas cujo desbloqueio é derivado de expressões lógicas combinando módulos concluídos e faixas de XP acumulado (ex.: "Olho Clínico de Triagem", "Águia do ECG", "Mestre do Protocolo Farmacológico", "Sentinela do Equivalente Isquêmico", "Agilidade Porta-Balão" e "Estrela Dourada do Plantão").
+  </p>
+
+  <!-- ================= CAPÍTULO 3 ================= -->
+  <div class="page-break"></div>
+  <div class="doc-header">
+    <span>CARDIOQUEST • ESPECIFICAÇÃO TÉCNICA E FLUXOGRAMAS</span>
+    <span>CAPÍTULO 3 • MAPA DE ROTAS E CONEXÕES</span>
+  </div>
+
+  <h1>3. Mapeamento de Rotas, Conexões e Parâmetros de Navegação</h1>
+
+  <p>
+    A navegação no CardioQuest é governada pelo mecanismo imperativo do <span class="code-badge">Navigator</span> do Flutter, integrando callbacks assíncronos (<span class="code-badge">.then((_) => _carregarDados())</span>) para garantir que toda alteração de XP ou destravamento de módulo seja refletida instantaneamente na tela anterior ao desempilhar (<span class="code-badge">pop</span>).
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Tela Origem</th>
+        <th>Tela Destino</th>
+        <th>Método Navigator</th>
+        <th>Parâmetros / Argumentos</th>
+        <th>Gatilho / Ação</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>main()</code></td>
+        <td><code>WelcomeScreen</code></td>
+        <td><code>MaterialApp(home:)</code></td>
+        <td>Nenhum (Construtor padrão)</td>
+        <td>Executado caso <code>nomeEnfermeiro == null</code> em SharedPreferences.</td>
+      </tr>
+      <tr>
+        <td><code>main()</code></td>
+        <td><code>DashboardScreen</code></td>
+        <td><code>MaterialApp(home:)</code></td>
+        <td><code>nomeEnfermeiro</code>, <code>avatar</code>, <code>avatarAsset</code></td>
+        <td>Executado caso o enfermeiro já possua cadastro salvo previamente.</td>
+      </tr>
+      <tr>
+        <td><code>WelcomeScreen</code></td>
+        <td><code>DashboardScreen</code></td>
+        <td><code>pushReplacement</code></td>
+        <td><code>nomeEnfermeiro</code>, <code>avatar</code>, <code>avatarAsset</code></td>
+        <td>Disparado pelo botão "BATER PONTO &amp; ASSUMIR PLANTÃO".</td>
+      </tr>
+      <tr>
+        <td><code>DashboardScreen</code></td>
+        <td><code>TrofeusScreen</code></td>
+        <td><code>push</code></td>
+        <td>Nenhum</td>
+        <td>Ícone de Troféu no AppBar ou card de Conquistas no HUD.</td>
+      </tr>
+      <tr>
+        <td><code>DashboardScreen</code></td>
+        <td><code>WelcomeScreen</code></td>
+        <td><code>pushReplacement</code></td>
+        <td>Nenhum</td>
+        <td>Confirmação do diálogo modal "Reiniciar Plantão?" (limpa SharedPreferences).</td>
+      </tr>
+      <tr>
+        <td><code>DashboardScreen</code></td>
+        <td><code>ProntuarioScreen</code></td>
+        <td><code>push</code></td>
+        <td><code>casoInicialId: 'caso_1'</code> ou ID selecionado</td>
+        <td>Toque no botão principal de condutas ou no card individual do paciente.</td>
+      </tr>
+      <tr>
+        <td><code>ProntuarioScreen</code></td>
+        <td><code>TriagemScreen</code></td>
+        <td><code>push</code></td>
+        <td><code>caso: CasoClinico</code></td>
+        <td>Toque no Card do Módulo 1 (Sempre liberado).</td>
+      </tr>
+      <tr>
+        <td><code>ProntuarioScreen</code></td>
+        <td><code>AnamneseScreen</code></td>
+        <td><code>push</code></td>
+        <td><code>caso: CasoClinico</code></td>
+        <td>Toque no Card do Módulo 2 (Liberado se Módulo 1 concluído).</td>
+      </tr>
+      <tr>
+        <td><code>ProntuarioScreen</code></td>
+        <td><code>EcgScreen</code></td>
+        <td><code>push</code></td>
+        <td><code>caso: CasoClinico</code></td>
+        <td>Toque no Card do Módulo 3 (Liberado se Módulo 2 concluído).</td>
+      </tr>
+      <tr>
+        <td><code>ProntuarioScreen</code></td>
+        <td><code>ProtocoloScreen</code></td>
+        <td><code>push</code></td>
+        <td><code>caso: CasoClinico</code></td>
+        <td>Toque no Card do Módulo 4 (Liberado se Módulo 3 concluído).</td>
+      </tr>
+      <tr>
+        <td><code>ProntuarioScreen</code></td>
+        <td><code>EnzimasScreen</code></td>
+        <td><code>push</code></td>
+        <td><code>caso: CasoClinico</code></td>
+        <td>Toque no Card do Módulo 5 (Liberado se Módulo 4 concluído).</td>
+      </tr>
+      <tr>
+        <td><code>ProntuarioScreen</code></td>
+        <td><code>AltaScreen</code></td>
+        <td><code>push</code></td>
+        <td><code>caso: CasoClinico</code></td>
+        <td>Toque no Card do Módulo 6 (Liberado se Módulo 5 concluído).</td>
+      </tr>
+      <tr>
+        <td>Qualquer Módulo (1 a 6)</td>
+        <td><code>ProntuarioScreen</code></td>
+        <td><code>pop</code></td>
+        <td>Nenhum (Estado persistido em disco)</td>
+        <td>Botão voltar no AppBar ou botão "Continuar" do modal de conclusão.</td>
+      </tr>
+      <tr>
+        <td><code>ProntuarioScreen</code></td>
+        <td><code>DashboardScreen</code></td>
+        <td><code>pop</code></td>
+        <td>Nenhum (Estado recarregado no .then)</td>
+        <td>Botão voltar no AppBar do Prontuário.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ================= CAPÍTULO 4 ================= -->
+  <div class="page-break"></div>
+  <div class="doc-header">
+    <span>CARDIOQUEST • ESPECIFICAÇÃO TÉCNICA E FLUXOGRAMAS</span>
+    <span>CAPÍTULO 4 • FLUXOGRAMA 1 (NAVEGAÇÃO GERAL)</span>
+  </div>
+
+  <h1>4. Fluxograma 1: Arquitetura Geral de Navegação</h1>
+  <p>
+    O diagrama a seguir sintetiza a árvore de fluxo de navegação da aplicação, evidenciando as transições entre o ciclo de vida inicial, o hub central do plantão, as subvisões de prontuário e as telas auxiliares de troféus e reset de sessão:
+  </p>
+
+  <div class="diagram-container">
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 680" width="100%" height="auto" class="flowchart-svg">
+  <defs>
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E3A8A"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+    <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284C7"/>
+      <stop offset="100%" stop-color="#0369A1"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+    <linearGradient id="amberGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D97706"/>
+      <stop offset="100%" stop-color="#B45309"/>
+    </linearGradient>
+    <linearGradient id="redGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#DC2626"/>
+      <stop offset="100%" stop-color="#991B1B"/>
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38BDF8"/>
+    </marker>
+    <marker id="arrowRed" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#F87171"/>
+    </marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#34D399"/>
+    </marker>
+  </defs>
+
+  <!-- Ponto de Entrada: main.dart -->
+  <g filter="url(#shadow)">
+    <rect x="360" y="20" width="280" height="56" rx="28" fill="url(#cyanGrad)" stroke="#38BDF8" stroke-width="2"/>
+    <text x="500" y="45" font-family="'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">Inicialização: main.dart</text>
+    <text x="500" y="62" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#BAE6FD" text-anchor="middle">Leitura assíncrona SharedPreferences</text>
+  </g>
+
+  <!-- Conexão para Decisão -->
+  <line x1="500" y1="76" x2="500" y2="114" stroke="#38BDF8" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <!-- Decisão de Sessão -->
+  <g filter="url(#shadow)">
+    <polygon points="500,115 670,165 500,215 330,165" fill="#1E293B" stroke="#0284C7" stroke-width="2"/>
+    <text x="500" y="158" font-family="'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="bold" fill="#F8FAFC" text-anchor="middle">Crachá Cadastrado?</text>
+    <text x="500" y="176" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#94A3B8" text-anchor="middle">(nomeEnfermeiro != null)</text>
+  </g>
+
+  <!-- Ramo NÃO: WelcomeScreen -->
+  <line x1="330" y1="165" x2="180" y2="165" stroke="#F87171" stroke-width="2.5"/>
+  <line x1="180" y1="165" x2="180" y2="225" stroke="#F87171" stroke-width="2.5" marker-end="url(#arrowRed)"/>
+  <rect x="235" y="145" width="40" height="18" rx="4" fill="#7F1D1D"/>
+  <text x="255" y="158" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="bold" fill="#FECACA" text-anchor="middle">NÃO</text>
+
+  <g filter="url(#shadow)">
+    <rect x="60" y="230" width="240" height="90" rx="12" fill="url(#cardGrad)" stroke="#EF4444" stroke-width="2"/>
+    <text x="180" y="258" font-family="'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">WelcomeScreen</text>
+    <text x="180" y="278" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#CBD5E1" text-anchor="middle">• Digitação de Nome</text>
+    <text x="180" y="296" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#CBD5E1" text-anchor="middle">• Escolha de Avatar (6 opções)</text>
+    <text x="180" y="312" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" fill="#F87171" text-anchor="middle">Ação: Bater Ponto &amp; Assumir</text>
+  </g>
+
+  <!-- Transição WelcomeScreen -> DashboardScreen via pushReplacement -->
+  <path d="M 180 320 L 180 365 L 360 365" fill="none" stroke="#34D399" stroke-width="2.5" marker-end="url(#arrowGreen)"/>
+  <rect x="200" y="345" width="135" height="18" rx="4" fill="#064E3B"/>
+  <text x="267" y="358" font-family="'Segoe UI', Roboto, sans-serif" font-size="9.5" font-weight="bold" fill="#A7F3D0" text-anchor="middle">pushReplacement()</text>
+
+  <!-- Ramo SIM: DashboardScreen -->
+  <line x1="500" y1="215" x2="500" y2="315" stroke="#34D399" stroke-width="2.5" marker-end="url(#arrowGreen)"/>
+  <rect x="510" y="245" width="38" height="18" rx="4" fill="#064E3B"/>
+  <text x="529" y="258" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="bold" fill="#A7F3D0" text-anchor="middle">SIM</text>
+
+  <!-- Central Hub: DashboardScreen -->
+  <g filter="url(#shadow)">
+    <rect x="370" y="320" width="260" height="100" rx="14" fill="url(#blueGrad)" stroke="#38BDF8" stroke-width="2.5"/>
+    <text x="500" y="348" font-family="'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="900" fill="#FFFFFF" text-anchor="middle">DashboardScreen</text>
+    <text x="500" y="368" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#38BDF8" text-anchor="middle">CENTRAL DO PLANTÃO MÉDICO</text>
+    <text x="500" y="388" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#E2E8F0" text-anchor="middle">XP • Patentes de Carreira • Telemetria Leito 02</text>
+    <text x="500" y="405" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#E2E8F0" text-anchor="middle">Lista de Pacientes (4 Leitos)</text>
+  </g>
+
+  <!-- Ações secundárias do Dashboard -->
+  <!-- Ação: TrofeusScreen -->
+  <line x1="630" y1="350" x2="760" y2="350" stroke="#38BDF8" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <g filter="url(#shadow)">
+    <rect x="765" y="315" width="190" height="70" rx="10" fill="url(#cardGrad)" stroke="#F59E0B" stroke-width="1.8"/>
+    <text x="860" y="342" font-family="'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="bold" fill="#FDE68A" text-anchor="middle">TrofeusScreen</text>
+    <text x="860" y="360" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#CBD5E1" text-anchor="middle">Galeria de 14 Medalhas</text>
+    <text x="860" y="375" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" fill="#94A3B8" text-anchor="middle">Retorno: pop()</text>
+  </g>
+
+  <!-- Ação: Resetar Plantão -->
+  <line x1="630" y1="395" x2="720" y2="395" stroke="#F87171" stroke-width="2"/>
+  <line x1="720" y1="395" x2="720" y2="445" stroke="#F87171" stroke-width="2"/>
+  <line x1="720" y1="445" x2="760" y2="445" stroke="#F87171" stroke-width="2" marker-end="url(#arrowRed)"/>
+  <g filter="url(#shadow)">
+    <rect x="765" y="420" width="190" height="60" rx="10" fill="url(#cardGrad)" stroke="#EF4444" stroke-width="1.8"/>
+    <text x="860" y="444" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#FCA5A5" text-anchor="middle">Diálogo: Reset Plantão</text>
+    <text x="860" y="462" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" fill="#94A3B8" text-anchor="middle">prefs.clear() → WelcomeScreen</text>
+  </g>
+
+  <!-- Transição Dashboard -> ProntuarioScreen -->
+  <line x1="500" y1="420" x2="500" y2="480" stroke="#38BDF8" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <rect x="510" y="440" width="95" height="18" rx="4" fill="#0C4A6E"/>
+  <text x="557" y="453" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="bold" fill="#7DD3FC" text-anchor="middle">push(casoId)</text>
+
+  <!-- Hub de Casos Clínicos: ProntuarioScreen -->
+  <g filter="url(#shadow)">
+    <rect x="330" y="485" width="340" height="100" rx="14" fill="url(#cardGrad)" stroke="#0284C7" stroke-width="2.5"/>
+    <text x="500" y="513" font-family="'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="900" fill="#FFFFFF" text-anchor="middle">ProntuarioScreen</text>
+    <text x="500" y="533" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#38BDF8" text-anchor="middle">CENTRAL DE PRONTUÁRIOS &amp; LEITOS</text>
+    <text x="500" y="552" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#E2E8F0" text-anchor="middle">Filtros • Seletor de 4 Pacientes • Sinais Vitais do Leito</text>
+    <text x="500" y="569" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#FBBF24" text-anchor="middle">Gerenciador de Trava (Locks) dos 6 Módulos Clínicos</text>
+  </g>
+
+  <!-- Conector para os 6 módulos -->
+  <line x1="500" y1="585" x2="500" y2="625" stroke="#38BDF8" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <g filter="url(#shadow)">
+    <rect x="250" y="630" width="500" height="40" rx="8" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+    <text x="500" y="655" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#BAE6FD" text-anchor="middle">CIRCUITO DOS 6 MÓDULOS CLÍNICOS (Fluxo Detalhado no Diagrama 2)</text>
+  </g>
+</svg>
+
+    <div class="diagram-caption">Figura 1 — Mapa Arquitetural de Navegação, Transições de Telas e Ciclo de Sessão</div>
+  </div>
+
+  <!-- ================= CAPÍTULO 5 ================= -->
+  <div class="page-break"></div>
+  <div class="doc-header">
+    <span>CARDIOQUEST • ESPECIFICAÇÃO TÉCNICA E FLUXOGRAMAS</span>
+    <span>CAPÍTULO 5 • FLUXOGRAMA 2 (ESTEIRA DOS MÓDULOS)</span>
+  </div>
+
+  <h1>5. Fluxograma 2: Circuito Sequencial dos Módulos Clínicos</h1>
+  <p>
+    Demonstração visual do pipeline pedagógico obrigatório. Cada módulo conclui uma competência clínica do atendimento cardiológico de emergência e atua como chave liberatória para a etapa subsequente:
+  </p>
+
+  <div class="diagram-container">
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 780" width="100%" height="auto" class="flowchart-svg">
+  <defs>
+    <linearGradient id="mod1Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#DC2626"/>
+      <stop offset="100%" stop-color="#991B1B"/>
+    </linearGradient>
+    <linearGradient id="mod2Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284C7"/>
+      <stop offset="100%" stop-color="#0369A1"/>
+    </linearGradient>
+    <linearGradient id="mod3Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E3A8A"/>
+      <stop offset="100%" stop-color="#1E293B"/>
+    </linearGradient>
+    <linearGradient id="mod4Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7C3AED"/>
+      <stop offset="100%" stop-color="#5B21B6"/>
+    </linearGradient>
+    <linearGradient id="mod5Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="100%" stop-color="#3730A3"/>
+    </linearGradient>
+    <linearGradient id="mod6Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+    <filter id="shadow2" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+    <marker id="arrow2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38BDF8"/>
+    </marker>
+    <marker id="arrowLock" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#34D399"/>
+    </marker>
+  </defs>
+
+  <!-- MÓDULO 1 -->
+  <g filter="url(#shadow2)">
+    <rect x="50" y="20" width="380" height="95" rx="12" fill="url(#mod1Grad)" stroke="#F87171" stroke-width="2"/>
+    <text x="75" y="48" font-family="'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="900" fill="#FFFFFF">MÓDULO 1 • TRIAGEM MANCHESTER</text>
+    <text x="75" y="70" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#FEE2E2">Classificação de Risco (Vermelho / Laranja / Amarelo / Verde / Azul)</text>
+    <text x="75" y="88" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#FEE2E2">Determinação do Tempo Porta-Atendimento • Entrada Sempre Liberada</text>
+    <rect x="350" y="32" width="65" height="22" rx="4" fill="#000000" fill-opacity="0.4"/>
+    <text x="382" y="47" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#FEF08A" text-anchor="middle">+150 XP</text>
+  </g>
+
+  <!-- Trava M1 -> M2 -->
+  <line x1="240" y1="115" x2="240" y2="155" stroke="#34D399" stroke-width="2.5" marker-end="url(#arrowLock)"/>
+  <rect x="250" y="125" width="220" height="20" rx="4" fill="#064E3B"/>
+  <text x="360" y="139" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="bold" fill="#A7F3D0" text-anchor="middle">Gera: venceu_{caso}_mod1 = true</text>
+
+  <!-- MÓDULO 2 -->
+  <g filter="url(#shadow2)">
+    <rect x="50" y="160" width="380" height="95" rx="12" fill="url(#mod2Grad)" stroke="#38BDF8" stroke-width="2"/>
+    <text x="75" y="188" font-family="'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="900" fill="#FFFFFF">MÓDULO 2 • ANAMNESE DIRECIONADA</text>
+    <text x="75" y="210" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#E0F2FE">Caracterização da Dor Torácica • Irradiação • Sintomas Autonômicos</text>
+    <text x="75" y="228" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#E0F2FE">Fatores de Risco (DM, HAS, Tabagismo) • Triagem de Contraindicações</text>
+    <rect x="350" y="172" width="65" height="22" rx="4" fill="#000000" fill-opacity="0.4"/>
+    <text x="382" y="187" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#FEF08A" text-anchor="middle">+150 XP</text>
+  </g>
+
+  <!-- Trava M2 -> M3 -->
+  <line x1="240" y1="255" x2="240" y2="295" stroke="#34D399" stroke-width="2.5" marker-end="url(#arrowLock)"/>
+  <rect x="250" y="265" width="220" height="20" rx="4" fill="#064E3B"/>
+  <text x="360" y="279" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="bold" fill="#A7F3D0" text-anchor="middle">Gera: venceu_{caso}_mod2 = true</text>
+
+  <!-- MÓDULO 3 -->
+  <g filter="url(#shadow2)">
+    <rect x="50" y="300" width="380" height="95" rx="12" fill="url(#mod3Grad)" stroke="#60A5FA" stroke-width="2"/>
+    <text x="75" y="328" font-family="'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="900" fill="#FFFFFF">MÓDULO 3 • ELETROCARDIOGRAMA (ECG)</text>
+    <text x="75" y="350" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#DBEAFE">Traçado 12 Derivações • Tempo Porta-ECG &lt; 10 minutos</text>
+    <text x="75" y="368" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#DBEAFE">IAMCSST (Supra V1-V4) vs IAMSSST vs Pericardite vs SVE</text>
+    <rect x="350" y="312" width="65" height="22" rx="4" fill="#000000" fill-opacity="0.4"/>
+    <text x="382" y="327" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#FEF08A" text-anchor="middle">+200 XP</text>
+  </g>
+
+  <!-- Trava M3 -> M4 (Transição para a coluna direita) -->
+  <path d="M 430 348 L 560 348 L 560 68 L 590 68" fill="none" stroke="#34D399" stroke-width="2.5" marker-end="url(#arrowLock)"/>
+  <rect x="460" y="200" width="105" height="40" rx="4" fill="#064E3B"/>
+  <text x="512" y="217" font-family="'Segoe UI', Roboto, sans-serif" font-size="9.5" font-weight="bold" fill="#A7F3D0" text-anchor="middle">venceu_mod3</text>
+  <text x="512" y="231" font-family="'Segoe UI', Roboto, sans-serif" font-size="9" fill="#A7F3D0" text-anchor="middle">Destrava M4</text>
+
+  <!-- MÓDULO 4 -->
+  <g filter="url(#shadow2)">
+    <rect x="590" y="20" width="380" height="95" rx="12" fill="url(#mod4Grad)" stroke="#A78BFA" stroke-width="2"/>
+    <text x="615" y="48" font-family="'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="900" fill="#FFFFFF">MÓDULO 4 • PROTOCOLO FARMACOLÓGICO</text>
+    <text x="615" y="70" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#EDE9FE">Seleção das 4 Intervenções Imediatas Prioritárias</text>
+    <text x="615" y="88" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#EDE9FE">Protocolo MONA • Antiagregação • Diurético / VNI se EAP</text>
+    <rect x="890" y="32" width="65" height="22" rx="4" fill="#000000" fill-opacity="0.4"/>
+    <text x="922" y="47" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#FEF08A" text-anchor="middle">+200 XP</text>
+  </g>
+
+  <!-- Trava M4 -> M5 -->
+  <line x1="780" y1="115" x2="780" y2="155" stroke="#34D399" stroke-width="2.5" marker-end="url(#arrowLock)"/>
+  <rect x="790" y="125" width="200" height="20" rx="4" fill="#064E3B"/>
+  <text x="890" y="139" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="bold" fill="#A7F3D0" text-anchor="middle">Gera: venceu_{caso}_mod4 = true</text>
+
+  <!-- MÓDULO 5 -->
+  <g filter="url(#shadow2)">
+    <rect x="590" y="160" width="380" height="95" rx="12" fill="url(#mod5Grad)" stroke="#818CF8" stroke-width="2"/>
+    <text x="615" y="188" font-family="'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="900" fill="#FFFFFF">MÓDULO 5 • ENZIMAS &amp; BIOMARCADORES</text>
+    <text x="615" y="210" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#E0E7FF">Cinética de Troponina I/T e CK-MB Massa</text>
+    <text x="615" y="228" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#E0E7FF">Curva Seriada (0h e 3h) • Diferenciação Isquêmica vs Reinfarto</text>
+    <rect x="890" y="172" width="65" height="22" rx="4" fill="#000000" fill-opacity="0.4"/>
+    <text x="922" y="187" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#FEF08A" text-anchor="middle">+150 XP</text>
+  </g>
+
+  <!-- Trava M5 -> M6 -->
+  <line x1="780" y1="255" x2="780" y2="295" stroke="#34D399" stroke-width="2.5" marker-end="url(#arrowLock)"/>
+  <rect x="790" y="265" width="200" height="20" rx="4" fill="#064E3B"/>
+  <text x="890" y="279" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="bold" fill="#A7F3D0" text-anchor="middle">Gera: venceu_{caso}_mod5 = true</text>
+
+  <!-- MÓDULO 6 -->
+  <g filter="url(#shadow2)">
+    <rect x="590" y="300" width="380" height="95" rx="12" fill="url(#mod6Grad)" stroke="#34D399" stroke-width="2"/>
+    <text x="615" y="328" font-family="'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="900" fill="#FFFFFF">MÓDULO 6 • ALTA &amp; DESFECHO CLÍNICO</text>
+    <text x="615" y="350" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#D1FAE5">Encaminhamento Imediato (Hemodinâmica / UCO / CTI)</text>
+    <text x="615" y="368" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#D1FAE5">Educação em Saúde • Prevenção Secundária Cardiovascular</text>
+    <rect x="890" y="312" width="65" height="22" rx="4" fill="#000000" fill-opacity="0.4"/>
+    <text x="922" y="327" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#FEF08A" text-anchor="middle">+200 XP</text>
+  </g>
+
+  <!-- Desfecho Total do Caso -->
+  <line x1="780" y1="395" x2="780" y2="455" stroke="#34D399" stroke-width="2.5" marker-end="url(#arrowLock)"/>
+  <g filter="url(#shadow2)">
+    <rect x="250" y="460" width="500" height="90" rx="14" fill="#0F172A" stroke="#F59E0B" stroke-width="2"/>
+    <text x="500" y="492" font-family="'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="bold" fill="#FEF08A" text-anchor="middle">CASO CLÍNICO CONCLUÍDO COM EXCELÊNCIA!</text>
+    <text x="500" y="515" font-family="'Segoe UI', Roboto, sans-serif" font-size="11.5" fill="#E2E8F0" text-anchor="middle">Total Acumulado: até +1.050 XP por Paciente Simulado</text>
+    <text x="500" y="534" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#38BDF8" text-anchor="middle">Desbloqueio de Medalhas Especiais na Galeria de Conquistas</text>
+  </g>
+
+  <!-- Legenda das Travas -->
+  <g filter="url(#shadow2)">
+    <rect x="50" y="580" width="900" height="170" rx="12" fill="#1E293B" stroke="#475569" stroke-width="1.5"/>
+    <text x="80" y="610" font-family="'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF">LEGENDA DO SISTEMA DE TRAVAS (LOCK ENGINE)</text>
+    
+    <circle cx="95" cy="640" r="10" fill="#34D399"/>
+    <text x="120" y="644" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#CBD5E1">Módulo Liberado: O enfermeiro pode acessar e resolver as etapas clínicas.</text>
+
+    <circle cx="95" cy="675" r="10" fill="#EF4444"/>
+    <text x="120" y="679" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#CBD5E1">Módulo Bloqueado: Exige aprovação obrigatória no módulo anterior para garantir coerência pedagógica.</text>
+
+    <circle cx="95" cy="710" r="10" fill="#38BDF8"/>
+    <text x="120" y="714" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#CBD5E1">Módulo Concluído: Pontuação creditada no perfil e status persistido permanentemente no dispositivo.</text>
+  </g>
+</svg>
+
+    <div class="diagram-caption">Figura 2 — Circuito Clínico de 6 Etapas e Máquina de Estados de Bloqueio (Lock Engine)</div>
+  </div>
+
+  <!-- ================= CAPÍTULO 6 ================= -->
+  <div class="page-break"></div>
+  <div class="doc-header">
+    <span>CARDIOQUEST • ESPECIFICAÇÃO TÉCNICA E FLUXOGRAMAS</span>
+    <span>CAPÍTULO 6 • FLUXOGRAMAS 3 E 4 (DECISÃO &amp; DADOS)</span>
+  </div>
+
+  <h1>6. Fluxogramas 3 e 4: Validação Pedagógica e Persistência</h1>
+
+  <h2>6.1. Algoritmo de Validação Pedagógica e Motor de Gamificação</h2>
+  <div class="diagram-container">
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 660" width="100%" height="auto" class="flowchart-svg">
+  <defs>
+    <linearGradient id="cardGrad3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+    <filter id="shadow3" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+    <marker id="arrow3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38BDF8"/>
+    </marker>
+    <marker id="arrow3Red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#F87171"/>
+    </marker>
+    <marker id="arrow3Green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#34D399"/>
+    </marker>
+  </defs>
+
+  <!-- Início: Ação do Usuário -->
+  <g filter="url(#shadow3)">
+    <rect x="340" y="20" width="320" height="55" rx="12" fill="#0284C7" stroke="#38BDF8" stroke-width="2"/>
+    <text x="500" y="44" font-family="'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="middle">Enfermeiro Seleciona Conduta</text>
+    <text x="500" y="60" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#E0F2FE" text-anchor="middle">Opção de Triagem / Droga / Diagnóstico de ECG</text>
+  </g>
+
+  <!-- Linha para Decisão -->
+  <line x1="500" y1="75" x2="500" y2="120" stroke="#38BDF8" stroke-width="2" marker-end="url(#arrow3)"/>
+
+  <!-- Validação com Gabarito Clínico -->
+  <g filter="url(#shadow3)">
+    <polygon points="500,120 680,175 500,230 320,175" fill="#1E293B" stroke="#F59E0B" stroke-width="2"/>
+    <text x="500" y="168" font-family="'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="middle">Resposta Correta?</text>
+    <text x="500" y="186" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#FDE68A" text-anchor="middle">(validação vs Gabarito Clínico)</text>
+  </g>
+
+  <!-- Ramo INCORRETO -->
+  <line x1="320" y1="175" x2="160" y2="175" stroke="#F87171" stroke-width="2.5"/>
+  <line x1="160" y1="175" x2="160" y2="245" stroke="#F87171" stroke-width="2.5" marker-end="url(#arrow3Red)"/>
+  <rect x="215" y="155" width="45" height="18" rx="4" fill="#7F1D1D"/>
+  <text x="237" y="168" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="bold" fill="#FECACA" text-anchor="middle">NÃO</text>
+
+  <g filter="url(#shadow3)">
+    <rect x="40" y="250" width="240" height="95" rx="10" fill="url(#cardGrad3)" stroke="#EF4444" stroke-width="2"/>
+    <text x="160" y="278" font-family="'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="bold" fill="#FCA5A5" text-anchor="middle">Feedback Corretivo</text>
+    <text x="160" y="298" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#E2E8F0" text-anchor="middle">• SnackBar com Alerta Clínico</text>
+    <text x="160" y="315" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" fill="#94A3B8" text-anchor="middle">• Reter etapa sem penalidade fatal</text>
+    <text x="160" y="330" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" fill="#38BDF8" text-anchor="middle">Permitir nova reflexão clínica</text>
+  </g>
+
+  <!-- Retorno do erro -->
+  <path d="M 160 345 L 160 410 L 300 410 L 300 45" fill="none" stroke="#F87171" stroke-width="1.8" stroke-dasharray="5,5"/>
+  <line x1="300" y1="45" x2="335" y2="45" stroke="#F87171" stroke-width="1.8" marker-end="url(#arrow3Red)"/>
+
+  <!-- Ramo CORRETO -->
+  <line x1="500" y1="230" x2="500" y2="290" stroke="#34D399" stroke-width="2.5" marker-end="url(#arrow3Green)"/>
+  <rect x="510" y="250" width="40" height="18" rx="4" fill="#064E3B"/>
+  <text x="530" y="263" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="bold" fill="#A7F3D0" text-anchor="middle">SIM</text>
+
+  <!-- Decisão de Fim do Módulo -->
+  <g filter="url(#shadow3)">
+    <polygon points="500,290 660,340 500,390 340,340" fill="#1E293B" stroke="#0284C7" stroke-width="2"/>
+    <text x="500" y="333" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#FFFFFF" text-anchor="middle">Última Pergunta da Etapa?</text>
+    <text x="500" y="350" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" fill="#BAE6FD" text-anchor="middle">(perguntaAtual == total - 1)</text>
+  </g>
+
+  <!-- Mais perguntas: Avança etapa -->
+  <line x1="660" y1="340" x2="790" y2="340" stroke="#38BDF8" stroke-width="2.5"/>
+  <line x1="790" y1="340" x2="790" y2="280" stroke="#38BDF8" stroke-width="2.5" marker-end="url(#arrow3)"/>
+  <g filter="url(#shadow3)">
+    <rect x="710" y="200" width="160" height="75" rx="10" fill="url(#cardGrad3)" stroke="#38BDF8" stroke-width="1.8"/>
+    <text x="790" y="228" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#BAE6FD" text-anchor="middle">Avançar Subetapa</text>
+    <text x="790" y="248" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" fill="#E2E8F0" text-anchor="middle">perguntaAtual++</text>
+    <text x="790" y="263" font-family="'Segoe UI', Roboto, sans-serif" font-size="9.5" fill="#34D399" text-anchor="middle">SnackBar de Sucesso</text>
+  </g>
+  <path d="M 790 200 L 790 45 L 665 45" fill="none" stroke="#38BDF8" stroke-width="1.8" stroke-dasharray="5,5" marker-end="url(#arrow3)"/>
+
+  <!-- Fim do Módulo: Consolidação -->
+  <line x1="500" y1="390" x2="500" y2="445" stroke="#34D399" stroke-width="2.5" marker-end="url(#arrow3Green)"/>
+  <g filter="url(#shadow3)">
+    <rect x="300" y="450" width="400" height="190" rx="14" fill="#0F172A" stroke="#34D399" stroke-width="2.5"/>
+    <text x="500" y="480" font-family="'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="900" fill="#34D399" text-anchor="middle">CONSOLIDAÇÃO DO MÓDULO</text>
+    
+    <text x="330" y="512" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#E2E8F0">1. Crédito de XP: prefs.setInt('xpEnfermeiro', xpAtual + moduloXP)</text>
+    <text x="330" y="534" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#E2E8F0">2. Persistência de Chave: prefs.setBool('venceu_{caso}_modX', true)</text>
+    <text x="330" y="556" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#E2E8F0">3. Avaliação de Progressão: Verifica 7 Patentes (Calouro a Lenda)</text>
+    <text x="330" y="578" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#E2E8F0">4. Desbloqueio de Medalhas: Avalia regras dos 14 Troféus</text>
+    <text x="330" y="600" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#38BDF8">5. Exibição de Modal comemorativo e pop() de retorno ao Prontuário</text>
+  </g>
+</svg>
+
+    <div class="diagram-caption">Figura 3 — Fluxo de Decisão, Validação contra Gabarito Clínico e Crédito de XP</div>
+  </div>
+
+  <div class="avoid-break">
+    <h2>6.2. Matriz de Persistência Local e Arquitetura de Dados</h2>
+    <div class="diagram-container">
+      
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" width="100%" height="auto" class="flowchart-svg">
+  <defs>
+    <linearGradient id="dbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#1E293B"/>
+    </linearGradient>
+    <filter id="shadow4" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow4)">
+    <rect x="50" y="20" width="900" height="520" rx="16" fill="url(#dbGrad)" stroke="#0284C7" stroke-width="2"/>
+    <text x="500" y="58" font-family="'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="900" fill="#38BDF8" text-anchor="middle">MATRIZ DE PERSISTÊNCIA LOCAL (SharedPreferences Engine)</text>
+    <text x="500" y="78" font-family="'Segoe UI', Roboto, sans-serif" font-size="11.5" fill="#94A3B8" text-anchor="middle">Armazenamento Chave-Valor Local e Privado no Dispositivo Móvel / Desktop</text>
+  </g>
+
+  <!-- Tabela de Chaves no SVG -->
+  <!-- Cabeçalho -->
+  <rect x="80" y="100" width="840" height="34" rx="6" fill="#1E293B" stroke="#334155"/>
+  <text x="100" y="122" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#38BDF8">CHAVE PERSISTIDA</text>
+  <text x="330" y="122" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#38BDF8">TIPO DART</text>
+  <text x="440" y="122" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#38BDF8">ORIGEM / RESPONSÁVEL</text>
+  <text x="680" y="122" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#38BDF8">FINALIDADE NO SISTEMA</text>
+
+  <!-- Linha 1 -->
+  <rect x="80" y="142" width="840" height="36" fill="#0F172A" fill-opacity="0.6"/>
+  <text x="100" y="165" font-family="'Courier New', monospace" font-size="11" fill="#FEF08A">nomeEnfermeiro</text>
+  <text x="330" y="165" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#CBD5E1">String</text>
+  <text x="440" y="165" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#CBD5E1">WelcomeScreen</text>
+  <text x="680" y="165" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#94A3B8">Nome do crachá para identificação do plantão</text>
+
+  <!-- Linha 2 -->
+  <rect x="80" y="184" width="840" height="36" fill="#1E293B" fill-opacity="0.4"/>
+  <text x="100" y="207" font-family="'Courier New', monospace" font-size="11" fill="#FEF08A">avatarEnfermeiro</text>
+  <text x="330" y="207" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#CBD5E1">String</text>
+  <text x="440" y="207" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#CBD5E1">WelcomeScreen</text>
+  <text x="680" y="207" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#94A3B8">Emoji do avatar de fallback (👨‍⚕️ / 👩‍⚕️)</text>
+
+  <!-- Linha 3 -->
+  <rect x="80" y="226" width="840" height="36" fill="#0F172A" fill-opacity="0.6"/>
+  <text x="100" y="249" font-family="'Courier New', monospace" font-size="11" fill="#FEF08A">avatarAssetEnfermeiro</text>
+  <text x="330" y="249" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#CBD5E1">String?</text>
+  <text x="440" y="249" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#CBD5E1">WelcomeScreen</text>
+  <text x="680" y="249" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#94A3B8">Caminho da imagem em assets/avatars/*.jpg</text>
+
+  <!-- Linha 4 -->
+  <rect x="80" y="268" width="840" height="36" fill="#1E293B" fill-opacity="0.4"/>
+  <text x="100" y="291" font-family="'Courier New', monospace" font-size="11" fill="#FEF08A">cargoEnfermeiro</text>
+  <text x="330" y="291" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#CBD5E1">String</text>
+  <text x="440" y="291" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#CBD5E1">WelcomeScreen / Níveis</text>
+  <text x="680" y="291" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#94A3B8">Título profissional ('Enfermeiro(a) de Plantão')</text>
+
+  <!-- Linha 5 -->
+  <rect x="80" y="310" width="840" height="36" fill="#0F172A" fill-opacity="0.6"/>
+  <text x="100" y="333" font-family="'Courier New', monospace" font-size="11" fill="#FEF08A">xpEnfermeiro</text>
+  <text x="330" y="333" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#CBD5E1">int</text>
+  <text x="440" y="333" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#CBD5E1">Módulos 1 a 6</text>
+  <text x="680" y="333" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#94A3B8">Pontuação acumulada (0 a 1000+ XP)</text>
+
+  <!-- Linha 6 -->
+  <rect x="80" y="352" width="840" height="36" fill="#1E293B" fill-opacity="0.4"/>
+  <text x="100" y="375" font-family="'Courier New', monospace" font-size="11" fill="#FEF08A">venceu_{casoId}_mod{1..6}</text>
+  <text x="330" y="375" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#CBD5E1">bool</text>
+  <text x="440" y="375" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#CBD5E1">Módulos Clínicos</text>
+  <text x="680" y="375" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#94A3B8">Status granular de conclusão por leito e módulo</text>
+
+  <!-- Linha 7 -->
+  <rect x="80" y="394" width="840" height="36" fill="#0F172A" fill-opacity="0.6"/>
+  <text x="100" y="417" font-family="'Courier New', monospace" font-size="11" fill="#FEF08A">venceu_mod{1..6}</text>
+  <text x="330" y="417" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#CBD5E1">bool</text>
+  <text x="440" y="417" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#CBD5E1">Módulos Clínicos</text>
+  <text x="680" y="417" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#94A3B8">Status global do módulo para galeria de troféus</text>
+
+  <!-- Rodapé da Matriz -->
+  <rect x="80" y="450" width="840" height="65" rx="8" fill="#1E293B" stroke="#059669"/>
+  <text x="100" y="475" font-family="'Segoe UI', Roboto, sans-serif" font-size="11.5" font-weight="bold" fill="#34D399">GARANTIA DE RESILIÊNCIA E PRIVACIDADE (LGPD):</text>
+  <text x="100" y="497" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#CBD5E1">Todos os dados residem 100% no sandbox local do app. Não há transmissão externa de prontuários ou identificadores.</text>
+</svg>
+
+      <div class="diagram-caption">Figura 4 — Esquema de Persistência Local Descentralizada via SharedPreferences</div>
+    </div>
+  </div>
+
+  <!-- ================= CAPÍTULO 7 ================= -->
+  <div class="page-break"></div>
+  <div class="doc-header">
+    <span>CARDIOQUEST • ESPECIFICAÇÃO TÉCNICA E FLUXOGRAMAS</span>
+    <span>CAPÍTULO 7 • SEGURANÇA E CONSIDERAÇÕES FINAIS</span>
+  </div>
+
+  <h1>7. Segurança da Informação, LGPD e Considerações Finais</h1>
+
+  <h2>7.1. Conformidade Estrita com a LGPD e Privacidade em Saúde</h2>
+  <p>
+    Por se tratar de uma ferramenta orientada à simulação e treinamento acadêmico, o <strong>CardioQuest</strong> adota o conceito de <em>Privacy by Design</em> e adere integralmente à <strong>Lei Geral de Proteção de Dados (Lei nº 13.709/2018)</strong>:
+  </p>
+  <ul>
+    <li><strong>Isenção de Dados Reais de Pacientes:</strong> Todas as personas clínicas (Sr. Carlos Mendes, Dona Maria da Graça, Lucas Almeida e Dona Helena Souza) são arquétipos sintéticos e ficcionais, estruturados exclusivamente para fins de treino mnemônico e raciocínio fisiopatológico.</li>
+    <li><strong>Isolamento Local (Sandbox Storage):</strong> Não há tráfego de dados para servidores de nuvem de terceiros ou rastreadores de telemetria analítica comercial. As preferências do enfermeiro (nome e pontuação) permanecem restritas ao contêiner de armazenamento do sistema operacional (<span class="code-badge">shared_preferences</span>).</li>
+    <li><strong>Direito ao Esquecimento e Reset Imediato:</strong> O usuário possui soberania total para eliminar todos os seus dados cadastrais, pontuações de experiência e histórico de atendimento a qualquer instante através do botão "Reiniciar Plantão", executando atomicamente o método <span class="code-badge">prefs.clear()</span>.</li>
+  </ul>
+
+  <h2>7.2. Padrões de Qualidade de Código e Manutenibilidade</h2>
+  <p>
+    O CardioQuest segue rigorosamente os padrões de código limpo estipulados no guia arquitetural do projeto:
+  </p>
+  <ul>
+    <li><strong>Tipagem Estrita e Null-Safety:</strong> Total aderência às regras do Dart 3, prevenindo exceções de ponteiro nulo (<span class="code-badge">null-safety</span>) em tempo de compilação.</li>
+    <li><strong>Design System Centralizado:</strong> Paleta de cores, tipografia, bordas e efeitos de HUD neon isolados na classe <span class="code-badge">CardioTheme</span>, garantindo coerência visual e facilidade de sustentação.</li>
+    <li><strong>Widgets Reutilizáveis e Modulares:</strong> Componentização de cards luminosos (<span class="code-badge">CardioHudCard</span>), botões táteis de ação rápida (<span class="code-badge">CardioButton</span>), badges de telemetria (<span class="code-badge">TelemetryBadge</span>) e avatares com crachá de Manchester (<span class="code-badge">PatientAvatarWidget</span>).</li>
+  </ul>
+
+  <div class="success-box">
+    <strong>Conclusão Técnica:</strong> O CardioQuest consolida uma solução técnica de alto impacto educacional para a enfermagem cardiológica de emergência, combinando fidelidade às diretrizes médicas contemporâneas da SBC/AHA com uma experiência imersiva, segura e auditável.
+  </div>
+
+  <div style="margin-top: 40px; border-top: 2px solid #CBD5E1; padding-top: 15px; display: flex; justify-content: space-between; font-size: 8.5pt; color: #64748B;">
+    <div><strong>CardioQuest</strong> — Documento Técnico Oficial</div>
+    <div>Documento gerado em conformidade com as especificações de engenharia de software.</div>
+  </div>
+
+</body>
+</html>
