@@ -134,7 +134,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           const Text(
                             'CardioQuest',
                             style: TextStyle(
-                              fontSize: 34,
+                              fontSize: 36,
                               fontWeight: FontWeight.w900,
                               letterSpacing: 1.5,
                               color: CardioTheme.textPrimary,
@@ -144,7 +144,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           const Text(
                             'TECNOLOGIA A SERVIÇO DA VIDA',
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 13,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 2.2,
                               color: CardioTheme.primary,
@@ -167,7 +167,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           const Text(
                             'SEU NOME NO CRACHÁ',
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 13,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 1.1,
                               color: CardioTheme.textMuted,
@@ -176,11 +176,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           const SizedBox(height: 8),
                           TextField(
                             controller: _controller,
-                            style: const TextStyle(color: CardioTheme.textPrimary, fontWeight: FontWeight.w600),
+                            style: const TextStyle(color: CardioTheme.textPrimary, fontSize: 16, fontWeight: FontWeight.w600),
                             onChanged: (valor) => setState(() => _nomeEnfermeiro = valor),
                             decoration: InputDecoration(
                               hintText: 'Digite seu nome para o crachá do plantão...',
-                              hintStyle: const TextStyle(color: CardioTheme.textMuted, fontSize: 14),
+                              hintStyle: const TextStyle(color: CardioTheme.textMuted, fontSize: 15),
                               prefixIcon: const Icon(Icons.person_outline, color: CardioTheme.primary),
                               filled: true,
                               fillColor: CardioTheme.surface,
@@ -200,7 +200,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           const Text(
                             'SELECIONE SEU AVATAR (3 ENFERMEIROS / 3 ENFERMEIRAS)',
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 13,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 1.1,
                               color: CardioTheme.textMuted,
@@ -226,8 +226,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                     children: [
                                       AnimatedContainer(
                                         duration: const Duration(milliseconds: 200),
-                                        width: 66,
-                                        height: 66,
+                                        width: 70,
+                                        height: 70,
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
                                           border: Border.all(
@@ -248,20 +248,20 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                           child: item['asset'] != null
                                               ? Image.asset(
                                                   item['asset'] as String,
-                                                  width: 66,
-                                                  height: 66,
+                                                  width: 70,
+                                                  height: 70,
                                                   fit: BoxFit.cover,
                                                   errorBuilder: (context, error, stackTrace) => Center(
                                                     child: Text(
                                                       item['emoji'] as String,
-                                                      style: const TextStyle(fontSize: 30),
+                                                      style: const TextStyle(fontSize: 32),
                                                     ),
                                                   ),
                                                 )
                                               : Center(
                                                   child: Text(
                                                     item['emoji'] as String,
-                                                    style: const TextStyle(fontSize: 30),
+                                                    style: const TextStyle(fontSize: 32),
                                                   ),
                                                 ),
                                         ),
@@ -317,7 +317,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         Text(
                           'AGILIDADE',
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 12.5,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 1.5,
                             color: CardioTheme.textMuted,
@@ -330,7 +330,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         Text(
                           'PRECISÃO',
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 12.5,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 1.5,
                             color: CardioTheme.textMuted,
@@ -343,7 +343,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         Text(
                           'VIDAS',
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 12.5,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 1.5,
                             color: CardioTheme.textMuted,

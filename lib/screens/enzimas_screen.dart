@@ -113,7 +113,7 @@ class _EnzimasScreenState extends State<EnzimasScreen> {
         ),
         title: const Text(
           'MÓDULO 5 • ENZIMAS CARDÍACAS',
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1.2),
         ),
       ),
       body: CyberGridBackground(
@@ -130,21 +130,21 @@ class _EnzimasScreenState extends State<EnzimasScreen> {
                     Text(
                       'ANÁLISE LABORATORIAL: ${_perguntaAtual + 1} DE ${_perguntas.length}',
                       style: const TextStyle(
-                        fontSize: 11,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.1,
                         color: CardioTheme.primary,
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: CardioTheme.primary.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: const Text(
                         '+150 XP',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: CardioTheme.primary),
+                        style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: CardioTheme.primary),
                       ),
                     ),
                   ],
@@ -170,10 +170,10 @@ class _EnzimasScreenState extends State<EnzimasScreen> {
                   child: Text(
                     pergunta['texto'],
                     style: const TextStyle(
-                      fontSize: 15,
+                      fontSize: 16.5,
                       fontWeight: FontWeight.w500,
                       color: CardioTheme.textPrimary,
-                      height: 1.4,
+                      height: 1.45,
                     ),
                   ),
                 ),
@@ -199,8 +199,8 @@ class _EnzimasScreenState extends State<EnzimasScreen> {
                           child: Row(
                             children: [
                               Container(
-                                width: 28,
-                                height: 28,
+                                width: 32,
+                                height: 32,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color: CardioTheme.primary.withValues(alpha: 0.15),
@@ -210,7 +210,7 @@ class _EnzimasScreenState extends State<EnzimasScreen> {
                                   child: Text(
                                     String.fromCharCode(65 + index),
                                     style: const TextStyle(
-                                      fontSize: 12,
+                                      fontSize: 13.5,
                                       fontWeight: FontWeight.bold,
                                       color: CardioTheme.primary,
                                     ),
@@ -222,10 +222,10 @@ class _EnzimasScreenState extends State<EnzimasScreen> {
                                 child: Text(
                                   pergunta['opcoes'][index],
                                   style: const TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 15.5,
                                     fontWeight: FontWeight.w500,
                                     color: CardioTheme.textPrimary,
-                                    height: 1.3,
+                                    height: 1.35,
                                   ),
                                 ),
                               ),

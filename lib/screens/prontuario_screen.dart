@@ -146,7 +146,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
         ),
         title: const Text(
           'CENTRAL DE PRONTUÁRIOS & LEITOS',
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1.2),
         ),
       ),
       body: CyberGridBackground(
@@ -175,7 +175,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
 
                 // 2. Carrossel Horizontal / Seletor Rápido de Pacientes
                 SizedBox(
-                  height: 94,
+                  height: 98,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: casosExibidos.length,
@@ -194,7 +194,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                         onTap: () => _trocarPaciente(paciente),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 180),
-                          width: 220,
+                          width: 230,
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                           decoration: BoxDecoration(
                             color: isSelected
@@ -225,7 +225,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                                 opacity: isDesbloqueado ? 1.0 : 0.45,
                                 child: PatientAvatarWidget(
                                   caso: paciente,
-                                  size: 52,
+                                  size: 56,
                                   isSelected: isSelected,
                                   showManchesterBadge: isDesbloqueado,
                                 ),
@@ -242,7 +242,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                                           child: Text(
                                             paciente.nome,
                                             style: TextStyle(
-                                              fontSize: 12,
+                                              fontSize: 14,
                                               fontWeight: FontWeight.bold,
                                               color: isDesbloqueado
                                                   ? (isSelected ? CardioTheme.textPrimary : CardioTheme.textSecondary)
@@ -254,7 +254,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                                         ),
                                         if (!isDesbloqueado) ...[
                                           const SizedBox(width: 4),
-                                          const Icon(Icons.lock_outline, size: 12, color: CardioTheme.textMuted),
+                                          const Icon(Icons.lock_outline, size: 13, color: CardioTheme.textMuted),
                                         ],
                                       ],
                                     ),
@@ -263,7 +263,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                                           ? '${paciente.leito} • NÍVEL ${paciente.nivel} (${paciente.dificuldade})'
                                           : 'NÍVEL ${paciente.nivel} • BLOQUEADO',
                                       style: TextStyle(
-                                        fontSize: 10,
+                                        fontSize: 11.5,
                                         fontWeight: FontWeight.w600,
                                         color: isDesbloqueado ? diffColor : CardioTheme.textMuted,
                                       ),
@@ -294,7 +294,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                         children: [
                           PatientAvatarWidget(
                             caso: _casoSelecionado,
-                            size: 78,
+                            size: 84,
                             showManchesterBadge: true,
                             isSelected: true,
                           ),
@@ -310,7 +310,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                                       child: Text(
                                         _casoSelecionado.nome,
                                         style: const TextStyle(
-                                          fontSize: 17,
+                                          fontSize: 20,
                                           fontWeight: FontWeight.w900,
                                           letterSpacing: 0.8,
                                           color: CardioTheme.textPrimary,
@@ -343,7 +343,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                                           child: Text(
                                             'NÍVEL ${_casoSelecionado.nivel} • ${_casoSelecionado.dificuldade}',
                                             style: TextStyle(
-                                              fontSize: 10,
+                                              fontSize: 11.5,
                                               fontWeight: FontWeight.bold,
                                               color: _casoSelecionado.dificuldade == 'FÁCIL'
                                                   ? CardioTheme.primary
@@ -372,7 +372,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                                           child: Text(
                                             _casoSelecionado.gravidade,
                                             style: TextStyle(
-                                              fontSize: 10,
+                                              fontSize: 11.5,
                                               fontWeight: FontWeight.bold,
                                               color: _casoSelecionado.gravidade == 'GRAVE'
                                                   ? CardioTheme.statusGrave
@@ -387,17 +387,17 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                                 const SizedBox(height: 4),
                                 Text(
                                   '${_casoSelecionado.idade} anos • ${_casoSelecionado.sexo} • ${_casoSelecionado.leito}',
-                                  style: const TextStyle(fontSize: 12, color: CardioTheme.textSecondary),
+                                  style: const TextStyle(fontSize: 13.5, color: CardioTheme.textSecondary),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   'Local: ${_casoSelecionado.sala}',
-                                  style: const TextStyle(fontSize: 11, color: CardioTheme.cyanAccent),
+                                  style: const TextStyle(fontSize: 12.5, color: CardioTheme.cyanAccent),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   'Médico: ${_casoSelecionado.medicoResponsavel}',
-                                  style: const TextStyle(fontSize: 11, color: CardioTheme.textMuted),
+                                  style: const TextStyle(fontSize: 12.5, color: CardioTheme.textMuted),
                                 ),
                               ],
                             ),
@@ -410,7 +410,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                       const Text(
                         'QUEIXA PRINCIPAL:',
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 12,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.0,
                           color: CardioTheme.textMuted,
@@ -419,13 +419,13 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                       const SizedBox(height: 4),
                       Text(
                         _casoSelecionado.queixaPrincipal,
-                        style: const TextStyle(fontSize: 13, color: CardioTheme.textPrimary, height: 1.3),
+                        style: const TextStyle(fontSize: 14.5, color: CardioTheme.textPrimary, height: 1.35),
                       ),
                       const SizedBox(height: 10),
                       const Text(
                         'EVOLUÇÃO CLÍNICA & CONDUTA:',
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 12,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.0,
                           color: CardioTheme.textMuted,
@@ -434,7 +434,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                       const SizedBox(height: 4),
                       Text(
                         _casoSelecionado.conduta,
-                        style: const TextStyle(fontSize: 12, color: CardioTheme.textSecondary, height: 1.3),
+                        style: const TextStyle(fontSize: 13.5, color: CardioTheme.textSecondary, height: 1.35),
                       ),
                     ],
                   ),
@@ -493,7 +493,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                     Text(
                       'CIRCUITO DE CONDUTAS CLÍNICAS (${_casoSelecionado.leito.toUpperCase()})',
                       style: const TextStyle(
-                        fontSize: 11,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.1,
                         color: CardioTheme.primary,
@@ -502,7 +502,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                     Text(
                       _casoSelecionado.classificacaoManchester.toUpperCase(),
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: 11.5,
                         fontWeight: FontWeight.bold,
                         color: _casoSelecionado.gravidade == 'GRAVE'
                             ? CardioTheme.statusGrave
@@ -617,7 +617,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
       onTap: () => setState(() => _tabFiltroLeitos = index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
           color: isSelected ? CardioTheme.primary.withValues(alpha: 0.2) : CardioTheme.surfaceCard,
           borderRadius: BorderRadius.circular(20),
@@ -629,7 +629,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 11,
+            fontSize: 12.5,
             fontWeight: FontWeight.bold,
             color: isSelected ? CardioTheme.primary : CardioTheme.textMuted,
           ),
@@ -674,8 +674,8 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
             child: Row(
               children: [
                 Container(
-                  width: 46,
-                  height: 46,
+                  width: 50,
+                  height: 50,
                   decoration: BoxDecoration(
                     color: isLiberado
                         ? borderColor.withValues(alpha: 0.15)
@@ -689,7 +689,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                   child: Icon(
                     isLiberado ? icon : Icons.lock_outline,
                     color: isLiberado ? borderColor : CardioTheme.textMuted,
-                    size: 22,
+                    size: 24,
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -704,7 +704,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                             child: Text(
                               titulo,
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: 15.5,
                                 fontWeight: FontWeight.bold,
                                 color: isLiberado ? CardioTheme.textPrimary : CardioTheme.textMuted,
                               ),
@@ -712,7 +712,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                             decoration: BoxDecoration(
                               color: isConcluido
                                   ? CardioTheme.primary.withValues(alpha: 0.2)
@@ -722,7 +722,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                             child: Text(
                               isConcluido ? 'CONCLUÍDO' : xp,
                               style: TextStyle(
-                                fontSize: 10,
+                                fontSize: 11.5,
                                 fontWeight: FontWeight.bold,
                                 color: isConcluido ? CardioTheme.primary : CardioTheme.cyanAccent,
                               ),
@@ -734,7 +734,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                       Text(
                         descricao,
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 13,
                           color: isLiberado ? CardioTheme.textSecondary : CardioTheme.textMuted.withValues(alpha: 0.6),
                         ),
                       ),
@@ -744,7 +744,7 @@ class _ProntuarioScreenState extends State<ProntuarioScreen> {
                 const SizedBox(width: 8),
                 Icon(
                   isLiberado ? Icons.arrow_forward_ios_rounded : Icons.lock,
-                  size: 14,
+                  size: 16,
                   color: isLiberado ? borderColor : CardioTheme.textMuted,
                 ),
               ],

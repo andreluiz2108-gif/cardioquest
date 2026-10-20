@@ -67,7 +67,7 @@ class CardioHudCard extends StatelessWidget {
                 if (headerIcon != null) ...[
                   Icon(
                     headerIcon,
-                    size: 16,
+                    size: 18,
                     color: glowColor ?? CardioTheme.primary,
                   ),
                   const SizedBox(width: 8),
@@ -76,7 +76,7 @@ class CardioHudCard extends StatelessWidget {
                   child: Text(
                     headerTitle!.toUpperCase(),
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 13.5,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.2,
                       color: glowColor ?? CardioTheme.textSecondary,

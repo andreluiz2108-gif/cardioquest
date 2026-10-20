@@ -200,7 +200,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const Text(
               'CENTRAL DO PLANTÃO MÉDICO',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.2,
                 color: CardioTheme.textPrimary,
@@ -241,8 +241,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Row(
                         children: [
                           Container(
-                            width: 76,
-                            height: 76,
+                            width: 82,
+                            height: 82,
                             decoration: BoxDecoration(
                               color: CardioTheme.surfaceElevated,
                               borderRadius: BorderRadius.circular(18),
@@ -256,11 +256,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       widget.avatarAsset!,
                                       fit: BoxFit.cover,
                                       errorBuilder: (context, error, stackTrace) => Center(
-                                        child: Text(widget.avatar, style: const TextStyle(fontSize: 40)),
+                                        child: Text(widget.avatar, style: const TextStyle(fontSize: 44)),
                                       ),
                                     )
                                   : Center(
-                                      child: Text(widget.avatar, style: const TextStyle(fontSize: 40)),
+                                      child: Text(widget.avatar, style: const TextStyle(fontSize: 44)),
                                     ),
                             ),
                           ),
@@ -276,7 +276,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       child: Text(
                                         widget.nomeEnfermeiro.toUpperCase(),
                                         style: const TextStyle(
-                                          fontSize: 18,
+                                          fontSize: 20,
                                           fontWeight: FontWeight.w900,
                                           letterSpacing: 1.1,
                                           color: CardioTheme.textPrimary,
@@ -285,7 +285,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       ),
                                     ),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                                       decoration: BoxDecoration(
                                         color: CardioTheme.primary.withValues(alpha: 0.15),
                                         borderRadius: BorderRadius.circular(8),
@@ -294,7 +294,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       child: Text(
                                         '$_xpAtual XP',
                                         style: const TextStyle(
-                                          fontSize: 12,
+                                          fontSize: 13,
                                           fontWeight: FontWeight.bold,
                                           color: CardioTheme.primary,
                                         ),
@@ -302,16 +302,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 2),
+                                const SizedBox(height: 3),
                                 Text(
                                   _cargoEnfermeiro,
-                                  style: const TextStyle(fontSize: 11, color: CardioTheme.cyanAccent),
+                                  style: const TextStyle(fontSize: 13, color: CardioTheme.cyanAccent),
                                 ),
-                                const SizedBox(height: 2),
+                                const SizedBox(height: 3),
                                 Text(
                                   nivelAtual['nome'],
                                   style: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                     color: nivelAtual['cor'],
                                   ),
@@ -321,7 +321,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   borderRadius: BorderRadius.circular(6),
                                   child: LinearProgressIndicator(
                                     value: progresso,
-                                    minHeight: 7,
+                                    minHeight: 8,
                                     backgroundColor: CardioTheme.surface,
                                     valueColor: const AlwaysStoppedAnimation<Color>(CardioTheme.primary),
                                   ),
@@ -359,12 +359,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         child: Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(8),
+                              padding: const EdgeInsets.all(9),
                               decoration: BoxDecoration(
                                 color: CardioTheme.cyanAccent.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Icon(Icons.assignment_outlined, color: CardioTheme.cyanAccent, size: 22),
+                              child: const Icon(Icons.assignment_outlined, color: CardioTheme.cyanAccent, size: 24),
                             ),
                             const SizedBox(width: 10),
                             const Expanded(
@@ -373,16 +373,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 children: [
                                   Text(
                                     'PRONTUÁRIOS',
-                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: CardioTheme.textPrimary),
+                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: CardioTheme.textPrimary),
                                   ),
                                   Text(
                                     '3 Níveis de Dificuldade',
-                                    style: TextStyle(fontSize: 10, color: CardioTheme.textMuted),
+                                    style: TextStyle(fontSize: 11.5, color: CardioTheme.textMuted),
                                   ),
                                 ],
                               ),
                             ),
-                            const Icon(Icons.arrow_forward_ios, size: 12, color: CardioTheme.cyanAccent),
+                            const Icon(Icons.arrow_forward_ios, size: 13, color: CardioTheme.cyanAccent),
                           ],
                         ),
                       ),
@@ -398,12 +398,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         child: Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(8),
+                              padding: const EdgeInsets.all(9),
                               decoration: BoxDecoration(
                                 color: CardioTheme.statusUrgente.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Icon(Icons.emoji_events_outlined, color: CardioTheme.statusUrgente, size: 22),
+                              child: const Icon(Icons.emoji_events_outlined, color: CardioTheme.statusUrgente, size: 24),
                             ),
                             const SizedBox(width: 10),
                             const Expanded(
@@ -412,16 +412,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 children: [
                                   Text(
                                     'CONQUISTAS',
-                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: CardioTheme.textPrimary),
+                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: CardioTheme.textPrimary),
                                   ),
                                   Text(
                                     'Galeria de Medalhas',
-                                    style: TextStyle(fontSize: 10, color: CardioTheme.textMuted),
+                                    style: TextStyle(fontSize: 11.5, color: CardioTheme.textMuted),
                                   ),
                                 ],
                               ),
                             ),
-                            const Icon(Icons.arrow_forward_ios, size: 12, color: CardioTheme.textMuted),
+                            const Icon(Icons.arrow_forward_ios, size: 13, color: CardioTheme.textMuted),
                           ],
                         ),
                       ),
@@ -486,7 +486,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const Text(
                       'PACIENTES EM ATENDIMENTO NO PLANTÃO (3)',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.1,
                         color: CardioTheme.primary,
@@ -495,7 +495,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Text(
                       'TOQUE PARA ATENDER',
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: 11.5,
                         fontWeight: FontWeight.bold,
                         color: CardioTheme.cyanAccent.withValues(alpha: 0.8),
                       ),
@@ -559,7 +559,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   opacity: isDesbloqueado ? 1.0 : 0.45,
                   child: PatientAvatarWidget(
                     caso: caso,
-                    size: 56,
+                    size: 62,
                     showManchesterBadge: isDesbloqueado,
                   ),
                 ),
@@ -574,7 +574,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             child: Text(
                               caso.nome,
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: 15,
                                 fontWeight: FontWeight.bold,
                                 color: isDesbloqueado ? CardioTheme.textPrimary : CardioTheme.textMuted,
                               ),
@@ -583,7 +583,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                             decoration: BoxDecoration(
                               color: isDesbloqueado ? diffColor.withValues(alpha: 0.18) : Colors.white10,
                               borderRadius: BorderRadius.circular(4),
@@ -595,7 +595,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             child: Text(
                               'NÍVEL ${caso.nivel} • ${caso.dificuldade}',
                               style: TextStyle(
-                                fontSize: 9,
+                                fontSize: 10.5,
                                 fontWeight: FontWeight.bold,
                                 color: isDesbloqueado ? diffColor : CardioTheme.textMuted,
                               ),
@@ -609,7 +609,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ? '${caso.leito} • ${caso.sala}'
                             : 'Bloqueado • Conclua o Nível ${caso.nivel - 1} para liberar',
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 12.5,
                           color: isDesbloqueado ? CardioTheme.textMuted : CardioTheme.statusUrgente.withValues(alpha: 0.8),
                         ),
                       ),
@@ -619,7 +619,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(width: 8),
                 Icon(
                   isDesbloqueado ? Icons.arrow_forward_ios : Icons.lock_outline,
-                  size: isDesbloqueado ? 13 : 18,
+                  size: isDesbloqueado ? 15 : 19,
                   color: isDesbloqueado ? CardioTheme.primary : CardioTheme.textMuted,
                 ),
               ],
@@ -633,12 +633,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildStatItem(String label, String value, IconData icon) {
     return Column(
       children: [
-        Icon(icon, size: 16, color: CardioTheme.primary),
+        Icon(icon, size: 19, color: CardioTheme.primary),
         const SizedBox(height: 4),
         Text(
           value,
           style: const TextStyle(
-            fontSize: 12,
+            fontSize: 14.5,
             fontWeight: FontWeight.bold,
             color: CardioTheme.textPrimary,
           ),
@@ -646,7 +646,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Text(
           label,
           style: const TextStyle(
-            fontSize: 9,
+            fontSize: 10.5,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.5,
             color: CardioTheme.textMuted,

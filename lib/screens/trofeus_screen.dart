@@ -218,7 +218,7 @@ class _TrofeusScreenState extends State<TrofeusScreen> {
         ),
         title: const Text(
           'GALERIA DE CONQUISTAS & MEDALHAS',
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1.2),
         ),
       ),
       body: CyberGridBackground(
@@ -244,7 +244,7 @@ class _TrofeusScreenState extends State<TrofeusScreen> {
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: CardioTheme.statusUrgente, width: 1.5),
                             ),
-                            child: const Icon(Icons.emoji_events, color: CardioTheme.statusUrgente, size: 24),
+                            child: const Icon(Icons.emoji_events, color: CardioTheme.statusUrgente, size: 26),
                           ),
                           const SizedBox(width: 14),
                           Expanded(
@@ -254,7 +254,7 @@ class _TrofeusScreenState extends State<TrofeusScreen> {
                                 const Text(
                                   'PROGRESSO DE CARREIRA CLÍNICA',
                                   style: TextStyle(
-                                    fontSize: 10,
+                                    fontSize: 11.5,
                                     fontWeight: FontWeight.bold,
                                     letterSpacing: 1.1,
                                     color: CardioTheme.statusUrgente,
@@ -264,7 +264,7 @@ class _TrofeusScreenState extends State<TrofeusScreen> {
                                 Text(
                                   '$totalDesbloqueadas DE ${_listaTrofeus.length} CONQUISTAS DESBLOQUEADAS',
                                   style: const TextStyle(
-                                    fontSize: 13,
+                                    fontSize: 14.5,
                                     fontWeight: FontWeight.bold,
                                     color: CardioTheme.textPrimary,
                                   ),
@@ -282,7 +282,7 @@ class _TrofeusScreenState extends State<TrofeusScreen> {
                             child: Text(
                               '$_xpTotal XP',
                               style: const TextStyle(
-                                fontSize: 13,
+                                fontSize: 13.5,
                                 fontWeight: FontWeight.bold,
                                 color: CardioTheme.primary,
                               ),
@@ -308,7 +308,7 @@ class _TrofeusScreenState extends State<TrofeusScreen> {
                 const Text(
                   'MEDALHAS DE MÉRITO CLÍNICO',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 13,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1.2,
                     color: CardioTheme.primary,
@@ -316,7 +316,7 @@ class _TrofeusScreenState extends State<TrofeusScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // 2. Lista Organizada e Elegante de Troféus (Ícones menores e hierarquia clara)
+                // 2. Lista Organizada e Elegante de Troféus
                 ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -348,10 +348,10 @@ class _TrofeusScreenState extends State<TrofeusScreen> {
                       ),
                       child: Row(
                         children: [
-                          // Ícone do Troféu elegante e compacto (22px)
+                          // Ícone do Troféu elegante e compacto
                           Container(
-                            width: 42,
-                            height: 42,
+                            width: 46,
+                            height: 46,
                             decoration: BoxDecoration(
                               color: desbloqueado ? cor.withValues(alpha: 0.15) : CardioTheme.surfaceElevated,
                               borderRadius: BorderRadius.circular(10),
@@ -363,7 +363,7 @@ class _TrofeusScreenState extends State<TrofeusScreen> {
                             child: Icon(
                               desbloqueado ? (trofeu['icone'] as IconData) : Icons.lock_outline,
                               color: desbloqueado ? cor : CardioTheme.textMuted,
-                              size: 20,
+                              size: 22,
                             ),
                           ),
                           const SizedBox(width: 14),
@@ -379,7 +379,7 @@ class _TrofeusScreenState extends State<TrofeusScreen> {
                                       child: Text(
                                         trofeu['titulo'] as String,
                                         style: TextStyle(
-                                          fontSize: 13,
+                                          fontSize: 15,
                                           fontWeight: FontWeight.bold,
                                           color: desbloqueado ? CardioTheme.textPrimary : CardioTheme.textMuted,
                                         ),
@@ -387,7 +387,7 @@ class _TrofeusScreenState extends State<TrofeusScreen> {
                                       ),
                                     ),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
                                       decoration: BoxDecoration(
                                         color: desbloqueado
                                             ? CardioTheme.primary.withValues(alpha: 0.15)
@@ -397,7 +397,7 @@ class _TrofeusScreenState extends State<TrofeusScreen> {
                                       child: Text(
                                         desbloqueado ? 'DESBLOQUEADO' : 'BLOQUEADO',
                                         style: TextStyle(
-                                          fontSize: 9,
+                                          fontSize: 10.5,
                                           fontWeight: FontWeight.bold,
                                           letterSpacing: 0.6,
                                           color: desbloqueado ? CardioTheme.primary : CardioTheme.textMuted,
@@ -410,7 +410,7 @@ class _TrofeusScreenState extends State<TrofeusScreen> {
                                 Text(
                                   trofeu['subtitulo'] as String,
                                   style: TextStyle(
-                                    fontSize: 11,
+                                    fontSize: 12.5,
                                     color: desbloqueado ? CardioTheme.textSecondary : CardioTheme.textMuted.withValues(alpha: 0.6),
                                   ),
                                 ),
@@ -420,7 +420,7 @@ class _TrofeusScreenState extends State<TrofeusScreen> {
                                     Text(
                                       trofeu['competencia'] as String,
                                       style: TextStyle(
-                                        fontSize: 10,
+                                        fontSize: 11.5,
                                         fontWeight: FontWeight.w600,
                                         color: desbloqueado ? cor : CardioTheme.textMuted,
                                       ),
@@ -429,7 +429,7 @@ class _TrofeusScreenState extends State<TrofeusScreen> {
                                     Text(
                                       trofeu['xp'] as String,
                                       style: TextStyle(
-                                        fontSize: 10,
+                                        fontSize: 11.5,
                                         fontWeight: FontWeight.bold,
                                         color: desbloqueado ? CardioTheme.primary : CardioTheme.textMuted,
                                       ),

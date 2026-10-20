@@ -126,7 +126,7 @@ class _EcgScreenState extends State<EcgScreen> {
         ),
         title: const Text(
           'MÓDULO 3 • ELETROCARDIOGRAMA (ECG)',
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1.2),
         ),
       ),
       body: CyberGridBackground(
@@ -143,21 +143,21 @@ class _EcgScreenState extends State<EcgScreen> {
                     Text(
                       'TRAÇADO ${_perguntaAtual + 1} DE ${_perguntas.length}',
                       style: const TextStyle(
-                        fontSize: 11,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.1,
                         color: CardioTheme.primary,
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: CardioTheme.primary.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: const Text(
                         '+200 XP',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: CardioTheme.primary),
+                        style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: CardioTheme.primary),
                       ),
                     ),
                   ],
@@ -205,7 +205,7 @@ class _EcgScreenState extends State<EcgScreen> {
                                 Text(
                                   'MONITOR TELEMETRIA 12-DERIVAÇÕES',
                                   style: TextStyle(
-                                    fontSize: 10,
+                                    fontSize: 11.5,
                                     fontWeight: FontWeight.bold,
                                     letterSpacing: 1.0,
                                     color: CardioTheme.textPrimary,
@@ -216,7 +216,7 @@ class _EcgScreenState extends State<EcgScreen> {
                             Text(
                               pergunta['alerta'],
                               style: TextStyle(
-                                fontSize: 11,
+                                fontSize: 12.5,
                                 fontWeight: FontWeight.bold,
                                 color: pergunta['corAlerta'],
                               ),
@@ -231,16 +231,16 @@ class _EcgScreenState extends State<EcgScreen> {
                           bottomRight: Radius.circular(14),
                         ),
                         child: SizedBox(
-                          height: 170,
+                          height: 180,
                           width: double.infinity,
                           child: Stack(
                             children: [
                               CustomPaint(
-                                size: const Size(double.infinity, 170),
+                                size: const Size(double.infinity, 180),
                                 painter: GridPainter(),
                               ),
                               CustomPaint(
-                                size: const Size(double.infinity, 170),
+                                size: const Size(double.infinity, 180),
                                 painter: _obterPainter(pergunta['tipoTracado']),
                               ),
                             ],
@@ -260,10 +260,10 @@ class _EcgScreenState extends State<EcgScreen> {
                   child: Text(
                     pergunta['texto'],
                     style: const TextStyle(
-                      fontSize: 14,
+                      fontSize: 16,
                       fontWeight: FontWeight.w500,
                       color: CardioTheme.textPrimary,
-                      height: 1.4,
+                      height: 1.45,
                     ),
                   ),
                 ),
@@ -289,8 +289,8 @@ class _EcgScreenState extends State<EcgScreen> {
                           child: Row(
                             children: [
                               Container(
-                                width: 28,
-                                height: 28,
+                                width: 32,
+                                height: 32,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color: CardioTheme.primary.withValues(alpha: 0.15),
@@ -300,7 +300,7 @@ class _EcgScreenState extends State<EcgScreen> {
                                   child: Text(
                                     String.fromCharCode(65 + index),
                                     style: const TextStyle(
-                                      fontSize: 12,
+                                      fontSize: 13.5,
                                       fontWeight: FontWeight.bold,
                                       color: CardioTheme.primary,
                                     ),
@@ -312,7 +312,7 @@ class _EcgScreenState extends State<EcgScreen> {
                                 child: Text(
                                   pergunta['opcoes'][index],
                                   style: const TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 15.5,
                                     fontWeight: FontWeight.w600,
                                     color: CardioTheme.textPrimary,
                                   ),

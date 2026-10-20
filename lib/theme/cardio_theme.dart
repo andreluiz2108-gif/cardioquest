@@ -113,6 +113,20 @@ class CardioTheme {
         onSurface: textPrimary,
       ),
       fontFamily: 'Roboto',
+      textTheme: const TextTheme(
+        headlineLarge: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: textPrimary),
+        headlineMedium: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: textPrimary),
+        headlineSmall: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: textPrimary),
+        titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textPrimary),
+        titleMedium: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: textPrimary),
+        titleSmall: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: textSecondary),
+        bodyLarge: TextStyle(fontSize: 16, color: textPrimary),
+        bodyMedium: TextStyle(fontSize: 14.5, color: textSecondary),
+        bodySmall: TextStyle(fontSize: 12.5, color: textMuted),
+        labelLarge: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: textPrimary),
+        labelMedium: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: textSecondary),
+        labelSmall: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: textMuted),
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: surface,
         elevation: 0,
@@ -120,7 +134,7 @@ class CardioTheme {
         scrolledUnderElevation: 0,
         titleTextStyle: TextStyle(
           color: textPrimary,
-          fontSize: 18,
+          fontSize: 20,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,
         ),
@@ -132,12 +146,12 @@ class CardioTheme {
           foregroundColor: textDark,
           elevation: 4,
           shadowColor: primary.withValues(alpha: 0.5),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 17),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
           textStyle: const TextStyle(
-            fontSize: 16,
+            fontSize: 17,
             fontWeight: FontWeight.bold,
             letterSpacing: 0.8,
           ),
@@ -145,7 +159,7 @@ class CardioTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: surfaceElevated,
-        contentTextStyle: const TextStyle(color: textPrimary, fontWeight: FontWeight.w600),
+        contentTextStyle: const TextStyle(color: textPrimary, fontSize: 14.5, fontWeight: FontWeight.w600),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: const BorderSide(color: borderMedium),
@@ -160,12 +174,12 @@ class CardioTheme {
         ),
         titleTextStyle: const TextStyle(
           color: textPrimary,
-          fontSize: 20,
+          fontSize: 22,
           fontWeight: FontWeight.bold,
         ),
         contentTextStyle: const TextStyle(
           color: textSecondary,
-          fontSize: 15,
+          fontSize: 16,
         ),
       ),
     );

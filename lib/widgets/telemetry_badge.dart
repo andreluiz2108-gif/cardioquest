@@ -23,7 +23,7 @@ class TelemetryBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: CardioTheme.surfaceElevated,
         borderRadius: BorderRadius.circular(12),
@@ -39,10 +39,10 @@ class TelemetryBadge extends StatelessWidget {
         children: [
           Icon(
             icon,
-            size: 20,
+            size: 22,
             color: isWarning ? CardioTheme.statusGrave : accentColor,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 9),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -50,7 +50,7 @@ class TelemetryBadge extends StatelessWidget {
               Text(
                 label.toUpperCase(),
                 style: const TextStyle(
-                  fontSize: 10,
+                  fontSize: 11.5,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 0.8,
                   color: CardioTheme.textMuted,
@@ -61,7 +61,7 @@ class TelemetryBadge extends StatelessWidget {
                   Text(
                     value,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 15.5,
                       fontWeight: FontWeight.bold,
                       color: isWarning ? CardioTheme.statusGrave : CardioTheme.textPrimary,
                     ),
@@ -74,7 +74,7 @@ class TelemetryBadge extends StatelessWidget {
                           : trend == 'down'
                               ? Icons.arrow_downward
                               : Icons.drag_handle,
-                      size: 12,
+                      size: 14,
                       color: isWarning ? CardioTheme.statusGrave : CardioTheme.primary,
                     ),
                   ],

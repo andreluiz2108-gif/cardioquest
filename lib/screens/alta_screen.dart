@@ -118,7 +118,7 @@ class _AltaScreenState extends State<AltaScreen> {
         ),
         title: const Text(
           'MÓDULO 6 • ALTA & EDUCAÇÃO EM SAÚDE',
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1.2),
         ),
       ),
       body: CyberGridBackground(
@@ -135,21 +135,21 @@ class _AltaScreenState extends State<AltaScreen> {
                     Text(
                       'ORIENTAÇÃO ${_indiceAtual + 1} DE ${_habitos.length}',
                       style: const TextStyle(
-                        fontSize: 11,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.1,
                         color: CardioTheme.primary,
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: CardioTheme.primary.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: const Text(
                         '+200 XP',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: CardioTheme.primary),
+                        style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: CardioTheme.primary),
                       ),
                     ),
                   ],
@@ -186,7 +186,7 @@ class _AltaScreenState extends State<AltaScreen> {
                             ),
                             child: const Icon(
                               Icons.health_and_safety_outlined,
-                              size: 40,
+                              size: 42,
                               color: CardioTheme.primary,
                             ),
                           ),
@@ -195,10 +195,10 @@ class _AltaScreenState extends State<AltaScreen> {
                             _habitos[_indiceAtual]["texto"],
                             textAlign: TextAlign.center,
                             style: const TextStyle(
-                              fontSize: 17,
+                              fontSize: 18.5,
                               fontWeight: FontWeight.w600,
                               color: CardioTheme.textPrimary,
-                              height: 1.4,
+                              height: 1.45,
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -206,7 +206,7 @@ class _AltaScreenState extends State<AltaScreen> {
                             'Você orientaria o paciente a adotar este hábito no plano de alta médica?',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 13.5,
                               color: CardioTheme.textMuted,
                             ),
                           ),
@@ -222,7 +222,7 @@ class _AltaScreenState extends State<AltaScreen> {
                   children: [
                     Expanded(
                       child: SizedBox(
-                        height: 56,
+                        height: 58,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: CardioTheme.surfaceCard,
@@ -234,13 +234,13 @@ class _AltaScreenState extends State<AltaScreen> {
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.close, color: CardioTheme.statusGrave),
+                              Icon(Icons.close, color: CardioTheme.statusGrave, size: 22),
                               SizedBox(width: 8),
                               Text(
                                 'NÃO INDICAR',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 14,
+                                  fontSize: 15,
                                   color: CardioTheme.statusGrave,
                                 ),
                               ),
@@ -252,7 +252,7 @@ class _AltaScreenState extends State<AltaScreen> {
                     const SizedBox(width: 14),
                     Expanded(
                       child: Container(
-                        height: 56,
+                        height: 58,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(14),
                           gradient: CardioTheme.primaryGradient,
@@ -269,13 +269,13 @@ class _AltaScreenState extends State<AltaScreen> {
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.check, color: CardioTheme.textDark),
+                              Icon(Icons.check, color: CardioTheme.textDark, size: 22),
                               SizedBox(width: 8),
                               Text(
                                 'RECOMENDAR',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 14,
+                                  fontSize: 15,
                                   color: CardioTheme.textDark,
                                 ),
                               ),

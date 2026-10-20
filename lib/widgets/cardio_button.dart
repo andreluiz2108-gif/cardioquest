@@ -20,8 +20,8 @@ class CardioButton extends StatelessWidget {
     this.isFullWidth = true,
     this.isSecondary = false,
     this.customColor,
-    this.height = 56,
-    this.fontSize = 16,
+    this.height = 58,
+    this.fontSize = 17,
   });
 
   @override
@@ -48,7 +48,7 @@ class CardioButton extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (icon != null) ...[
-                Icon(icon, size: 20, color: customColor ?? CardioTheme.textPrimary),
+                Icon(icon, size: 22, color: customColor ?? CardioTheme.textPrimary),
                 const SizedBox(width: 8),
               ],
               Text(
@@ -99,7 +99,7 @@ class CardioButton extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (icon != null) ...[
-                  Icon(icon, size: 20, color: CardioTheme.textDark),
+                  Icon(icon, size: 22, color: CardioTheme.textDark),
                   const SizedBox(width: 8),
                 ],
                 Flexible(
@@ -118,7 +118,7 @@ class CardioButton extends StatelessWidget {
                 const SizedBox(width: 6),
                 const Icon(
                   Icons.arrow_forward_ios_rounded,
-                  size: 14,
+                  size: 15,
                   color: CardioTheme.textDark,
                 ),
               ],

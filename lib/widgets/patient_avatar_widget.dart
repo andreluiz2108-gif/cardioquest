@@ -17,7 +17,7 @@ class PatientAvatarWidget extends StatelessWidget {
     this.caso,
     this.assetPath,
     this.fallbackEmoji = '👤',
-    this.size = 62,
+    this.size = 66,
     this.showManchesterBadge = true,
     this.isSelected = false,
     this.onTap,
@@ -54,7 +54,7 @@ class PatientAvatarWidget extends StatelessWidget {
     final effectiveAsset = assetPath ?? caso?.avatarAsset;
     final effectiveEmoji = caso?.avatar ?? fallbackEmoji;
     final manchesterColor = _obterCorManchester();
-    final badgeSize = (size * 0.38).clamp(16.0, 24.0);
+    final badgeSize = (size * 0.40).clamp(18.0, 26.0);
 
     Widget avatarContent;
     if (effectiveAsset != null && effectiveAsset.isNotEmpty) {
